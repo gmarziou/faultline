@@ -22,7 +22,7 @@
         <h1 class="text-xl font-bold text-gray-900"><%= @error_group.exception_class %></h1>
         <p class="mt-1 text-sm text-gray-500"><%= @error_group.sanitized_message %></p>
       </div>
-      <div class="flex gap-2">
+      <div class="flex gap-2 flex-wrap">
         <% if @error_group.status == "unresolved" %>
           <%= button_to "Resolve", faultline.resolve_error_group_path(@error_group), method: :patch,
               class: "px-4 py-2 text-sm bg-cyan-600 text-white rounded-md hover:bg-cyan-700" %>
@@ -31,6 +31,11 @@
         <% else %>
           <%= button_to "Unresolve", faultline.unresolve_error_group_path(@error_group), method: :patch,
               class: "px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700" %>
+        <% end %>
+        <% if Faultline.configuration.github_configured? %>
+          <%= button_to "Create Issue", faultline.create_github_issue_error_group_path(@error_group),
+              method: :post,
+              class: "px-4 py-2 text-sm bg-gray-800 text-white rounded-md hover:bg-gray-900" %>
         <% end %>
         <%= button_to "Delete", faultline.error_group_path(@error_group), method: :delete,
             data: { confirm: "Are you sure you want to delete this error group and all its occurrences?" },

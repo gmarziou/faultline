@@ -2,7 +2,7 @@
 
 module Faultline
   class ErrorGroupsController < ApplicationController
-    before_action :set_error_group, only: [:show, :resolve, :unresolve, :ignore, :destroy]
+    before_action :set_error_group, only: [:show, :resolve, :unresolve, :ignore, :destroy, :create_github_issue]
 
     PER_PAGE = 25
 
@@ -89,6 +89,28 @@ module Faultline
     def destroy
       @error_group.destroy
       redirect_to error_groups_path, notice: "Error group deleted"
+    end
+
+    def create_github_issue
+      unless Faultline.configuration.github_configured?
+        return redirect_back fallback_location: error_group_path(@error_group),
+                            alert: "GitHub integration not configured"
+      end
+
+      occurrence = @error_group.error_occurrences.order(created_at: :desc).first
+
+      result = GithubIssueCreator.new(
+        error_group: @error_group,
+        error_occurrence: occurrence
+      ).create
+
+      if result[:success]
+        redirect_back fallback_location: error_group_path(@error_group),
+                      notice: "GitHub issue created: ##{result[:issue_number]}"
+      else
+        redirect_back fallback_location: error_group_path(@error_group),
+                      alert: result[:error]
+      end
     end
 
     def bulk_action

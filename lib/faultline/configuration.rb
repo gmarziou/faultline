@@ -22,7 +22,10 @@ module Faultline
                   :middleware_ignore_paths,
                   :backtrace_lines_limit,
                   :sanitize_fields,
-                  :retention_days
+                  :retention_days,
+                  :github_repo,
+                  :github_token,
+                  :github_labels
 
     def initialize
       @user_class = "User"
@@ -54,6 +57,13 @@ module Faultline
       @backtrace_lines_limit = 50
       @sanitize_fields = %w[password password_confirmation token api_key secret access_token refresh_token]
       @retention_days = 90
+      @github_repo = nil
+      @github_token = nil
+      @github_labels = ["bug", "faultline"]
+    end
+
+    def github_configured?
+      @github_repo.present? && @github_token.present?
     end
 
     def add_notifier(notifier)

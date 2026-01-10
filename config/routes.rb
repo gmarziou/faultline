@@ -8,6 +8,7 @@ Faultline::Engine.routes.draw do
       patch :resolve
       patch :unresolve
       patch :ignore
+      post :create_github_issue
     end
 
     collection do

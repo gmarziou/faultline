@@ -141,6 +141,24 @@ Faultline.configure do |config|
   config.notification_cooldown = 5.minutes
 
   # =============================================================================
+  # GitHub Integration
+  # =============================================================================
+
+  # Create GitHub issues from error groups with full context.
+  # Store credentials in Rails credentials:
+  #   rails credentials:edit
+  #   faultline:
+  #     github:
+  #       token: "ghp_xxxxx"
+  #
+  # config.github_repo = "your-org/your-repo"
+  # config.github_token = Rails.application.credentials.dig(:faultline, :github, :token)
+
+  # Labels to add to created issues (customize for your workflow)
+  # Add "faultline-auto-fix" to trigger AI auto-fix via GitHub Actions
+  # config.github_labels = ["bug", "faultline", "faultline-auto-fix"]
+
+  # =============================================================================
   # Error Capture Configuration
   # =============================================================================
 
