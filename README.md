@@ -311,19 +311,19 @@ Faultline::ErrorOccurrence
 
 ## Comparison with Alternatives
 
-| Feature | Faultline | Sentry | Honeybadger | Rollbar | Bugsnag | Errbit |
-|---------|-----------|--------|-------------|---------|---------|--------|
-| Self-hosted | ✅ | ⚠️ Paid | ❌ | ❌ | ❌ | ✅ |
-| Free tier | ✅ Unlimited | 5K errors/mo | 1 project | 5K errors/mo | 7.5K events/mo | ✅ Unlimited |
-| Rails native | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
-| Local variables | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
-| GitHub integration | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Full-text search | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Source maps (JS) | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
-| Performance/APM | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ |
-| Session replay | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
-| Multi-language | Ruby | 30+ | 10+ | 20+ | 25+ | Ruby |
-| Active development | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ Slow |
+| Feature | Faultline | Solid Errors | Sentry | Honeybadger | Rollbar |
+|---------|-----------|--------------|--------|-------------|---------|
+| Self-hosted | ✅ | ✅ | ⚠️ Paid | ❌ | ❌ |
+| Free tier | ✅ Unlimited | ✅ Unlimited | 5K errors/mo | 1 project | 5K errors/mo |
+| Rails native | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Local variables | ✅ | ❌ | ✅ | ✅ | ❌ |
+| GitHub integration | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Full-text search | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Notifications | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Error grouping | ✅ | ❌ | ✅ | ✅ | ✅ |
+| Source maps (JS) | ❌ | ❌ | ✅ | ✅ | ✅ |
+| Performance/APM | ❌ | ❌ | ✅ | ✅ | ❌ |
+| Multi-language | Ruby | Ruby | 30+ | 10+ | 20+ |
 
 **Faultline is ideal for:**
 - Teams wanting full control over error data
