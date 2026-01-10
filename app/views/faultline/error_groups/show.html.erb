@@ -1,0 +1,219 @@
+<div class="mb-6">
+  <%= link_to "&larr; Back to Errors".html_safe, faultline.error_groups_path, class: "text-sm text-gray-500 hover:text-gray-700" %>
+</div>
+
+<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200">
+    <div class="flex items-start justify-between">
+      <div>
+        <div class="flex items-center gap-2 mb-2">
+          <% if @error_group.recently_reopened? %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-yellow-100 text-yellow-800">Reopened</span>
+          <% end %>
+          <% case @error_group.status %>
+          <% when "unresolved" %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-red-100 text-red-800">Unresolved</span>
+          <% when "resolved" %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Resolved</span>
+          <% when "ignored" %>
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800">Ignored</span>
+          <% end %>
+        </div>
+        <h1 class="text-xl font-bold text-gray-900"><%= @error_group.exception_class %></h1>
+        <p class="mt-1 text-sm text-gray-500"><%= @error_group.sanitized_message %></p>
+      </div>
+      <div class="flex gap-2">
+        <% if @error_group.status == "unresolved" %>
+          <%= button_to "Resolve", faultline.resolve_error_group_path(@error_group), method: :patch,
+              class: "px-4 py-2 text-sm bg-cyan-600 text-white rounded-md hover:bg-cyan-700" %>
+          <%= button_to "Ignore", faultline.ignore_error_group_path(@error_group), method: :patch,
+              class: "px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700" %>
+        <% else %>
+          <%= button_to "Unresolve", faultline.unresolve_error_group_path(@error_group), method: :patch,
+              class: "px-4 py-2 text-sm bg-violet-600 text-white rounded-md hover:bg-violet-700" %>
+        <% end %>
+        <%= button_to "Delete", faultline.error_group_path(@error_group), method: :delete,
+            data: { confirm: "Are you sure you want to delete this error group and all its occurrences?" },
+            class: "px-4 py-2 text-sm bg-red-600 text-white rounded-md hover:bg-red-700" %>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-4 py-5 sm:px-6">
+    <dl class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Occurrences</dt>
+        <dd class="mt-1 text-lg font-semibold text-gray-900"><%= @error_group.occurrences_count %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">First Seen</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @error_group.first_seen_at&.strftime("%Y-%m-%d %H:%M") %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Last Seen</dt>
+        <dd class="mt-1 text-sm text-gray-900"><%= @error_group.last_seen_at&.strftime("%Y-%m-%d %H:%M") %></dd>
+      </div>
+      <div>
+        <dt class="text-sm font-medium text-gray-500">Location</dt>
+        <dd class="mt-1 text-sm text-gray-900 font-mono truncate">
+          <%= @error_group.file_path %>:<%= @error_group.line_number %>
+          <% if @error_group.method_name.present? %>
+            in `<%= @error_group.method_name %>`
+          <% end %>
+        </dd>
+      </div>
+    </dl>
+  </div>
+</div>
+
+<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+  <div class="px-4 py-5 sm:px-6 border-b border-gray-200 flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <h2 class="text-lg font-medium text-gray-900">Occurrences Over Time</h2>
+      <% if @zoomed %>
+        <%= link_to "← Zoom Out",
+            faultline.error_group_path(@error_group, period: @period),
+            class: "px-2 py-1 text-xs bg-cyan-600 text-white rounded hover:bg-cyan-700" %>
+        <span class="text-xs text-gray-500">
+          <%= @zoom_start.strftime("%b %d %H:%M") %> - <%= @zoom_end.strftime("%b %d %H:%M") %>
+        </span>
+      <% end %>
+    </div>
+    <% unless @zoomed %>
+      <div class="flex gap-1">
+        <% Faultline::ErrorGroup::PERIODS.keys.each do |period| %>
+          <%= link_to period,
+              faultline.error_group_path(@error_group, period: period),
+              class: "px-2 py-1 text-xs rounded #{@period == period ? 'bg-cyan-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}" %>
+        <% end %>
+      </div>
+    <% end %>
+  </div>
+  <div class="p-4">
+    <% if @chart_data.any? %>
+      <canvas id="occurrencesChart" height="100"></canvas>
+      <% unless @zoomed %>
+        <p class="text-xs text-gray-400 text-center mt-2">Click on a data point to zoom in</p>
+      <% end %>
+    <% else %>
+      <p class="text-center text-gray-500 py-8">No occurrences in this period</p>
+    <% end %>
+  </div>
+</div>
+
+<% if @chart_data.any? %>
+<%
+  if @zoomed
+    duration = @zoom_end - @zoom_start
+    granularity = duration <= 1.hour ? :minute : (duration <= 1.day ? :hour : :day)
+  else
+    period_config = Faultline::ErrorGroup::PERIODS[@period] || {}
+    granularity = period_config[:granularity] || :day
+  end
+  time_format = case granularity
+                when :minute then "%H:%M"
+                when :hour then "%b %d %H:00"
+                else "%b %d"
+                end
+  # Calculate zoom interval in milliseconds
+  zoom_interval = case granularity
+                  when :minute then 60 * 1000      # zoom shows 1 minute
+                  when :hour then 3600 * 1000      # zoom shows 1 hour
+                  else 86400 * 1000                # zoom shows 1 day
+                  end
+%>
+<script>
+  const ctx = document.getElementById('occurrencesChart').getContext('2d');
+  const timestamps = <%= @chart_data.keys.map { |d| d.iso8601 }.to_json.html_safe %>;
+  const canZoom = <%= (!@zoomed && granularity != :minute).to_json %>;
+  const zoomInterval = <%= zoom_interval %>;
+  const baseUrl = '<%= faultline.error_group_path(@error_group) %>';
+  const currentPeriod = '<%= @period %>';
+
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: <%= @chart_data.keys.map { |d| d.strftime(time_format) }.to_json.html_safe %>,
+      datasets: [{
+        label: 'Occurrences',
+        data: <%= @chart_data.values.to_json %>,
+        backgroundColor: 'rgba(6, 182, 212, 0.8)',
+        borderColor: 'rgb(6, 182, 212)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: { beginAtZero: true, ticks: { stepSize: 1 } }
+      },
+      onClick: (event, elements) => {
+        if (canZoom && elements.length > 0) {
+          const index = elements[0].index;
+          const clickedTime = new Date(timestamps[index]);
+          const zoomEnd = new Date(clickedTime.getTime() + zoomInterval);
+          const url = `${baseUrl}?period=${currentPeriod}&zoom_start=${clickedTime.toISOString()}&zoom_end=${zoomEnd.toISOString()}`;
+          window.location = url;
+        }
+      },
+      onHover: (event, elements) => {
+        if (canZoom) {
+          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
+        }
+      }
+    }
+  });
+</script>
+<% end %>
+
+<div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="px-4 py-4 sm:px-6 border-b border-gray-200 flex items-center justify-between">
+    <h2 class="text-lg font-medium text-gray-900">Occurrences</h2>
+    <span class="text-sm text-gray-500"><%= @total_count %> total</span>
+  </div>
+
+  <% if @occurrences.any? %>
+    <div class="divide-y divide-gray-100">
+      <% @occurrences.each do |occurrence| %>
+        <%= link_to faultline.error_occurrence_path(occurrence), class: "block group" do %>
+          <div class="px-4 py-2.5 sm:px-6 hover:bg-gray-50 border-l-2 border-transparent hover:border-cyan-500 transition-all duration-150">
+            <div class="flex items-center justify-between gap-4">
+              <div class="flex items-center gap-2 min-w-0 flex-1">
+                <span class="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-600 flex-shrink-0">
+                  <%= occurrence.request_method || "—" %>
+                </span>
+                <span class="text-sm text-gray-700 truncate"><%= occurrence.message.to_s.truncate(80) %></span>
+              </div>
+              <div class="flex items-center gap-3 flex-shrink-0 text-xs text-gray-400">
+                <% if occurrence.user_identifier %>
+                  <span class="hidden sm:inline"><%= occurrence.user_identifier %></span>
+                <% end %>
+                <% if occurrence.ip_address.present? %>
+                  <span class="font-mono hidden md:inline"><%= occurrence.ip_address %></span>
+                <% end %>
+                <span title="<%= occurrence.created_at.strftime("%Y-%m-%d %H:%M:%S") %>"><%= time_ago_in_words(occurrence.created_at) %></span>
+                <svg class="w-4 h-4 text-gray-300 group-hover:text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        <% end %>
+      <% end %>
+    </div>
+
+    <% if @total_pages > 1 %>
+      <div class="px-4 py-3 bg-gray-50 border-t border-gray-200">
+        <%= render "faultline/shared/pagination", page: @page, total_pages: @total_pages %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="px-4 py-12 text-center">
+      <svg class="mx-auto h-12 w-12 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+      </svg>
+      <p class="mt-2 text-sm text-gray-500">No occurrences found</p>
+    </div>
+  <% end %>
+</div>

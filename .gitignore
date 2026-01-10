@@ -1,0 +1,25 @@
+# OS files
+.DS_Store
+
+# Bundler
+/.bundle
+/Gemfile.lock
+
+# Editor files
+*.swp
+*~
+.idea/
+.vscode/
+
+# Test artifacts
+/coverage/
+/spec/reports/
+/test/tmp/
+/test/version_tmp/
+/tmp/
+
+# RDoc
+/rdoc/
+/.yardoc
+/_yardoc/
+/doc/

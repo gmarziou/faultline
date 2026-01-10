@@ -1,0 +1,211 @@
+<div class="mb-6">
+  <nav class="flex items-center gap-2 text-sm">
+    <%= link_to "Errors", faultline.error_groups_path, class: "text-gray-500 hover:text-gray-700" %>
+    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <%= link_to @error_group.exception_class, faultline.error_group_path(@error_group), class: "text-gray-500 hover:text-gray-700 truncate max-w-xs" %>
+    <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+    </svg>
+    <span class="text-gray-900 font-medium">Occurrence</span>
+  </nav>
+</div>
+
+<!-- Header -->
+<div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+  <div class="px-6 py-5">
+    <div class="flex items-center gap-3 mb-3">
+      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-cyan-100 text-cyan-700 border border-cyan-200">
+        <%= @occurrence.exception_class %>
+      </span>
+      <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600">
+        <%= @occurrence.environment %>
+      </span>
+      <span class="text-xs text-gray-400 ml-auto"><%= @occurrence.created_at.strftime("%b %d, %Y at %H:%M:%S") %></span>
+    </div>
+    <p class="text-lg text-gray-900 font-medium leading-relaxed"><%= @occurrence.message %></p>
+  </div>
+</div>
+
+<!-- Metadata Row -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+  <div class="bg-white shadow rounded-lg px-4 py-4">
+    <div class="flex items-center gap-2 text-gray-500 text-xs mb-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+      </svg>
+      User
+    </div>
+    <p class="text-gray-900 text-sm font-medium truncate"><%= @occurrence.user_identifier || "Anonymous" %></p>
+  </div>
+
+  <div class="bg-white shadow rounded-lg px-4 py-4">
+    <div class="flex items-center gap-2 text-gray-500 text-xs mb-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9" />
+      </svg>
+      IP Address
+    </div>
+    <p class="text-gray-900 text-sm font-medium font-mono"><%= @occurrence.ip_address || "Unknown" %></p>
+  </div>
+
+  <div class="bg-white shadow rounded-lg px-4 py-4">
+    <div class="flex items-center gap-2 text-gray-500 text-xs mb-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 12h14M5 12a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v4a2 2 0 01-2 2M5 12a2 2 0 00-2 2v4a2 2 0 002 2h14a2 2 0 002-2v-4a2 2 0 00-2-2" />
+      </svg>
+      Server
+    </div>
+    <p class="text-gray-900 text-sm font-medium truncate"><%= @occurrence.hostname %></p>
+    <p class="text-gray-500 text-xs">PID: <%= @occurrence.process_id %></p>
+  </div>
+
+  <div class="bg-white shadow rounded-lg px-4 py-4">
+    <div class="flex items-center gap-2 text-gray-500 text-xs mb-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+      When
+    </div>
+    <p class="text-gray-900 text-sm font-medium"><%= time_ago_in_words(@occurrence.created_at) %> ago</p>
+  </div>
+</div>
+
+<% if @occurrence.request_url.present? %>
+  <!-- Request Info -->
+  <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+        <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+        </svg>
+        <h2 class="text-sm font-medium text-gray-900">Request</h2>
+      </div>
+      <div class="p-4 space-y-4 max-h-96 overflow-y-auto">
+        <div>
+          <div class="flex items-center gap-2 mb-2">
+            <span class="inline-flex items-center px-2 py-0.5 rounded text-xs font-bold bg-cyan-100 text-cyan-700">
+              <%= @occurrence.request_method %>
+            </span>
+          </div>
+          <code class="text-xs text-gray-600 break-all block bg-gray-50 p-2 rounded"><%= @occurrence.request_url %></code>
+        </div>
+
+        <% if @occurrence.user_agent.present? %>
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-1">User Agent</p>
+            <p class="text-xs text-gray-700 break-all"><%= @occurrence.user_agent %></p>
+          </div>
+        <% end %>
+
+        <% if @occurrence.parsed_request_params.any? %>
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-2">Parameters</p>
+            <pre class="text-xs bg-gray-50 text-gray-700 p-3 rounded-md overflow-x-auto font-mono"><code><%= JSON.pretty_generate(@occurrence.parsed_request_params) %></code></pre>
+          </div>
+        <% end %>
+
+        <% if @occurrence.parsed_request_headers.any? %>
+          <div>
+            <p class="text-xs font-medium text-gray-500 mb-2">Headers</p>
+            <pre class="text-xs bg-gray-50 text-gray-700 p-3 rounded-md overflow-x-auto font-mono"><code><%= JSON.pretty_generate(@occurrence.parsed_request_headers) %></code></pre>
+          </div>
+        <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @occurrence.error_contexts.any? %>
+  <!-- Custom Context -->
+  <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+        <svg class="w-5 h-5 text-violet-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+        </svg>
+        <h2 class="text-sm font-medium text-gray-900">Custom Context</h2>
+      </div>
+      <div class="divide-y divide-gray-100">
+        <% @occurrence.error_contexts.each do |context| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start gap-4">
+              <span class="text-xs font-medium text-gray-500 w-28 flex-shrink-0 pt-0.5"><%= context.key %></span>
+              <div class="flex-1 min-w-0">
+                <% parsed = context.parsed_value %>
+                <% if parsed.is_a?(Hash) || parsed.is_a?(Array) %>
+                  <pre class="text-xs bg-gray-50 text-gray-700 p-3 rounded-md overflow-x-auto font-mono"><code><%= JSON.pretty_generate(parsed) %></code></pre>
+                <% else %>
+                  <span class="text-sm text-gray-900 font-mono"><%= parsed %></span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+    </div>
+  </div>
+<% end %>
+
+<% if @occurrence.parsed_local_variables.any? %>
+  <!-- Local Variables -->
+  <div class="bg-white shadow rounded-lg overflow-hidden mb-6">
+      <div class="px-4 py-3 border-b border-gray-200 flex items-center gap-2">
+        <svg class="w-5 h-5 text-amber-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4" />
+        </svg>
+        <h2 class="text-sm font-medium text-gray-900">Local Variables</h2>
+        <span class="text-xs text-gray-400">at raise point</span>
+      </div>
+      <div class="divide-y divide-gray-100">
+        <% @occurrence.parsed_local_variables.each do |name, value| %>
+          <div class="px-4 py-3">
+            <div class="flex items-start gap-4">
+              <span class="text-xs font-medium text-amber-600 w-28 flex-shrink-0 pt-0.5 font-mono"><%= name %></span>
+              <div class="flex-1 min-w-0">
+                <% if value.is_a?(Hash) || value.is_a?(Array) %>
+                  <pre class="text-xs bg-gray-50 text-gray-700 p-3 rounded-md overflow-x-auto font-mono"><code><%= JSON.pretty_generate(value) %></code></pre>
+                <% elsif value.is_a?(String) && value.start_with?("[") %>
+                  <span class="text-xs text-gray-400 italic"><%= value %></span>
+                <% else %>
+                  <span class="text-sm text-gray-900 font-mono"><%= value.inspect %></span>
+                <% end %>
+              </div>
+            </div>
+          </div>
+        <% end %>
+    </div>
+  </div>
+<% end %>
+
+<!-- Stack Trace (Full Width) -->
+<div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="px-4 py-3 border-b border-gray-200 flex items-center justify-between">
+    <div class="flex items-center gap-2">
+      <svg class="w-5 h-5 text-cyan-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+      </svg>
+      <h2 class="text-sm font-medium text-gray-900">Stack Trace</h2>
+    </div>
+    <span class="text-xs text-gray-500"><%= @occurrence.parsed_backtrace.count %> frames</span>
+  </div>
+  <div class="p-4 bg-gray-50 overflow-x-auto">
+    <% if @occurrence.parsed_backtrace.any? %>
+      <div class="space-y-0.5 font-mono text-xs">
+        <% @occurrence.parsed_backtrace.each_with_index do |line, index| %>
+          <% is_app_line = line.include?(Rails.root.to_s) && !line.include?("/gems/") %>
+          <% clean_line = line.sub(Rails.root.to_s + "/", "") %>
+          <div class="group flex items-start gap-3 <%= is_app_line ? 'bg-cyan-50 -mx-2 px-2 py-1.5 rounded border-l-2 border-cyan-500' : 'py-1 -mx-2 px-2' %>">
+            <span class="text-gray-400 select-none w-6 text-right flex-shrink-0"><%= index + 1 %></span>
+            <span class="<%= is_app_line ? 'text-gray-800' : 'text-gray-500' %> break-all">
+              <% if clean_line =~ /^(.+):(\d+):in `(.+)'$/ %>
+                <span class="<%= is_app_line ? 'text-gray-700' : 'text-gray-500' %>"><%= $1 %></span><span class="text-gray-400">:</span><span class="text-violet-600"><%= $2 %></span><span class="text-gray-400">:in </span><span class="text-cyan-600">`<%= $3 %>'</span>
+              <% else %>
+                <%= clean_line %>
+              <% end %>
+            </span>
+          </div>
+        <% end %>
+      </div>
+    <% else %>
+      <p class="text-sm text-gray-500 text-center py-8">No backtrace available</p>
+    <% end %>
+  </div>
+</div>

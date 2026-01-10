@@ -1,0 +1,189 @@
+# frozen_string_literal: true
+
+Faultline.configure do |config|
+  # =============================================================================
+  # User Configuration
+  # =============================================================================
+
+  # User class for association (default: "User")
+  config.user_class = "<%= options[:user_class] %>"
+
+  # Method to get current user in controllers
+  config.user_method = :current_user
+
+  # Method to get current account (optional, for multi-tenant apps)
+  # config.account_method = :current_account
+
+  # =============================================================================
+  # Error Filtering
+  # =============================================================================
+
+  # Exceptions to ignore (won't be tracked)
+  config.ignored_exceptions = [
+    "ActiveRecord::RecordNotFound",
+    "ActionController::RoutingError",
+    "ActionController::UnknownFormat",
+    "ActionController::InvalidAuthenticityToken",
+    "ActionController::BadRequest"
+  ]
+
+  # User agents to ignore (bots, crawlers)
+  config.ignored_user_agents = [
+    /bot/i, /crawler/i, /spider/i, /Googlebot/i, /Bingbot/i, /Slurp/i
+  ]
+
+  # =============================================================================
+  # Dashboard Authentication
+  # =============================================================================
+
+  # Return true if the user should have access to the dashboard
+  # IMPORTANT: Configure this before deploying to production!
+  config.authenticate_with = lambda { |request|
+    # Example for Devise with admin role:
+    # user = request.env["warden"]&.user
+    # user&.admin?
+
+    # Example for basic Devise (any authenticated user):
+    # request.env["warden"]&.authenticated?
+
+    # Example for custom session-based auth:
+    # request.session[:user_id].present?
+
+    # Default: Allow all in development, deny in production
+    Rails.env.development?
+  }
+
+  # Optional: Additional authorization after authentication
+  # config.authorize_with = lambda { |request|
+  #   # Add extra authorization logic here
+  #   true
+  # }
+
+  # =============================================================================
+  # Notifications
+  # =============================================================================
+
+  # App name for notifications (shown in alert messages)
+  config.app_name = Rails.application.class.module_parent_name
+
+  # Notification rules - when to send alerts
+  config.notification_rules = {
+    on_first_occurrence: true,           # Alert on new error types
+    on_reopen: true,                     # Alert when resolved errors reoccur
+    on_threshold: [10, 50, 100, 500],    # Alert at these occurrence counts
+    critical_exceptions: [],              # Always alert for these exception classes
+    notify_in_environments: ["production"]
+  }
+
+  # --- Telegram Notifier ---
+  # Store credentials in Rails credentials:
+  #   rails credentials:edit
+  #   telegram:
+  #     bot_token: "your-bot-token"
+  #     chat_id: "your-chat-id"
+  #
+  # if Rails.application.credentials.dig(:faultline, :telegram, :bot_token)
+  #   config.add_notifier(
+  #     Faultline::Notifiers::Telegram.new(
+  #       bot_token: Rails.application.credentials.dig(:faultline, :telegram, :bot_token),
+  #       chat_id: Rails.application.credentials.dig(:faultline, :telegram, :chat_id)
+  #     )
+  #   )
+  # end
+
+  # --- Slack Notifier ---
+  # Store webhook URL in Rails credentials:
+  #   rails credentials:edit
+  #   faultline:
+  #     slack:
+  #       webhook_url: "https://hooks.slack.com/services/..."
+  #
+  # if Rails.application.credentials.dig(:faultline, :slack, :webhook_url)
+  #   config.add_notifier(
+  #     Faultline::Notifiers::Slack.new(
+  #       webhook_url: Rails.application.credentials.dig(:faultline, :slack, :webhook_url),
+  #       channel: "#errors",
+  #       username: "Faultline"
+  #     )
+  #   )
+  # end
+
+  # --- Generic Webhook Notifier ---
+  # For custom integrations (PagerDuty, Opsgenie, Discord, etc.)
+  #
+  # config.add_notifier(
+  #   Faultline::Notifiers::Webhook.new(
+  #     url: ENV["FAULTLINE_WEBHOOK_URL"],
+  #     method: :post,
+  #     headers: { "Authorization" => "Bearer #{ENV['FAULTLINE_WEBHOOK_TOKEN']}" }
+  #   )
+  # )
+
+  # --- Resend Email Notifier ---
+  # Sends error notifications via Resend API (https://resend.com)
+  # Store API key in Rails credentials:
+  #   rails credentials:edit
+  #   faultline:
+  #     resend:
+  #       api_key: "re_xxxxx"
+  #
+  # if Rails.application.credentials.dig(:faultline, :resend, :api_key)
+  #   config.add_notifier(
+  #     Faultline::Notifiers::Resend.new(
+  #       api_key: Rails.application.credentials.dig(:faultline, :resend, :api_key),
+  #       from: "errors@yourdomain.com",
+  #       to: "team@example.com"            # or array: ["dev@example.com", "ops@example.com"]
+  #     )
+  #   )
+  # end
+
+  # Notification cooldown - prevent spam during error storms (nil to disable)
+  config.notification_cooldown = 5.minutes
+
+  # =============================================================================
+  # Middleware Configuration
+  # =============================================================================
+
+  # Enable Rack middleware to catch errors automatically
+  config.enable_middleware = true
+
+  # Paths to ignore (no error tracking for these)
+  config.middleware_ignore_paths = ["/assets", "/up", "/health", "/faultline"]
+
+  # =============================================================================
+  # Data Configuration
+  # =============================================================================
+
+  # Maximum backtrace lines to store per occurrence
+  config.backtrace_lines_limit = 50
+
+  # How long to keep error data in days (nil = forever)
+  # Consider setting up a cleanup job if you have high error volume
+  config.retention_days = 90
+
+  # =============================================================================
+  # Callbacks (Advanced)
+  # =============================================================================
+
+  # Before tracking - return false to skip tracking this error
+  # config.before_track = lambda { |exception, context|
+  #   # Example: Skip timeout errors
+  #   return false if exception.message.include?("Timeout")
+  #   true
+  # }
+
+  # After tracking - for custom integrations
+  # config.after_track = lambda { |error_group, occurrence|
+  #   # Example: Send to analytics
+  #   Analytics.track("error_occurred", {
+  #     exception: error_group.exception_class,
+  #     count: error_group.occurrences_count
+  #   })
+  # }
+
+  # Custom fingerprinting - control how errors are grouped
+  # config.custom_fingerprint = lambda { |exception, context|
+  #   # Example: Group by feature flag
+  #   { extra_components: [context.dig(:custom_data, :feature_flag)] }
+  # }
+end
