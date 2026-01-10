@@ -12,9 +12,10 @@ A self-hosted error tracking engine for Rails 8+ applications. Track errors, get
 - **Full-Text Search** - Search errors by exception class, message, or file path
 - **Status Management** - Mark errors as resolved, unresolved, or ignored
 - **Auto-Reopen** - Resolved errors automatically reopen when they recur
+- **GitHub Integration** - Create GitHub issues directly from errors with full context
 - **Rate Limiting** - Configurable cooldown prevents notification spam during error storms
 - **Pluggable Notifiers** - Telegram, Slack, Resend (email), webhooks, or build your own
-- **Standalone Dashboard** - Clean Tailwind UI with charts, no external dependencies
+- **Standalone Dashboard** - Clean Tailwind UI with interactive charts and time-range zooming
 - **Configurable Authentication** - Integrate with Devise, Warden, or custom auth
 - **Request Context** - Capture URL, params, headers, user info, and custom data
 
@@ -122,6 +123,21 @@ config.add_notifier(
     to: "team@example.com"  # or array: ["dev@example.com", "ops@example.com"]
   )
 )
+```
+
+### GitHub Integration
+
+Create GitHub issues directly from the error dashboard with full context including stack traces, local variables, and source code snippets.
+
+```ruby
+# Store in credentials: rails credentials:edit
+# faultline:
+#   github:
+#     token: "ghp_xxxxx"
+
+config.github_repo = "your-org/your-repo"
+config.github_token = Rails.application.credentials.dig(:faultline, :github, :token)
+config.github_labels = ["bug", "faultline"]  # default labels for created issues
 ```
 
 ### Rate Limiting
@@ -295,19 +311,26 @@ Faultline::ErrorOccurrence
 
 ## Comparison with Alternatives
 
-| Feature | Faultline | Sentry | Honeybadger |
-|---------|-----------|--------|-------------|
-| Self-hosted | ✅ | ❌ | ❌ |
-| No external deps | ✅ | ❌ | ❌ |
-| Free | ✅ | Limited | Limited |
-| Rails native | ✅ | ✅ | ✅ |
-| Source maps | ❌ | ✅ | ✅ |
-| Performance monitoring | ❌ | ✅ | ✅ |
+| Feature | Faultline | Sentry | Honeybadger | Rollbar | Bugsnag | Errbit |
+|---------|-----------|--------|-------------|---------|---------|--------|
+| Self-hosted | ✅ | ⚠️ Paid | ❌ | ❌ | ❌ | ✅ |
+| Free tier | ✅ Unlimited | 5K errors/mo | 1 project | 5K errors/mo | 7.5K events/mo | ✅ Unlimited |
+| Rails native | ✅ | ✅ | ✅ | ✅ | ✅ | ✅ |
+| Local variables | ✅ | ✅ | ✅ | ❌ | ❌ | ❌ |
+| GitHub integration | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Full-text search | ✅ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Source maps (JS) | ❌ | ✅ | ✅ | ✅ | ✅ | ❌ |
+| Performance/APM | ❌ | ✅ | ✅ | ❌ | ✅ | ❌ |
+| Session replay | ❌ | ✅ | ❌ | ❌ | ❌ | ❌ |
+| Multi-language | Ruby | 30+ | 10+ | 20+ | 25+ | Ruby |
+| Active development | ✅ | ✅ | ✅ | ✅ | ✅ | ⚠️ Slow |
 
-Faultline is ideal for:
+**Faultline is ideal for:**
 - Teams wanting full control over error data
-- Projects with privacy/compliance requirements
-- Simple error tracking without SaaS costs
+- Projects with privacy/compliance requirements (GDPR, HIPAA)
+- Rails-only applications without complex frontend needs
+- Developers who prefer simplicity over feature bloat
+- Organizations avoiding vendor lock-in and recurring SaaS costs
 
 ## Development
 
