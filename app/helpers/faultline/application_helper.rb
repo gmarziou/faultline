@@ -31,33 +31,30 @@ module Faultline
     def highlight_ruby(code)
       return "" if code.blank?
 
-      highlighted = h(code)
+      tokens = []
+      scanner = StringScanner.new(code)
 
-      # Comments
-      highlighted = highlighted.gsub(/(#.*)$/, '<span class="text-gray-400 italic">\1</span>')
-
-      # Strings (double and single quoted)
-      highlighted = highlighted.gsub(/(&quot;.*?&quot;|&#39;.*?&#39;|".*?"|'.*?')/, '<span class="text-emerald-600">\1</span>')
-
-      # Symbols
-      highlighted = highlighted.gsub(/(:[\w_]+)/, '<span class="text-purple-600">\1</span>')
-
-      # Keywords
-      keywords = %w[def end class module if else elsif unless case when then do begin rescue ensure raise return yield while until for break next retry self true false nil and or not in]
-      keywords.each do |kw|
-        highlighted = highlighted.gsub(/\b(#{kw})\b/, '<span class="text-rose-600 font-medium">\1</span>')
+      until scanner.eos?
+        if scanner.scan(/#.*/)
+          tokens << %(<span class="text-gray-400 italic">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/)
+          tokens << %(<span class="text-emerald-600">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/:\w+/)
+          tokens << %(<span class="text-purple-600">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/@\w+/)
+          tokens << %(<span class="text-cyan-600">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/\b(def|end|class|module|if|else|elsif|unless|case|when|then|do|begin|rescue|ensure|raise|return|yield|while|until|for|break|next|retry|self|true|false|nil|and|or|not|in)\b/)
+          tokens << %(<span class="text-rose-600 font-medium">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/\b\d+\.?\d*\b/)
+          tokens << %(<span class="text-blue-600">#{h(scanner.matched)}</span>)
+        elsif scanner.scan(/\w+/)
+          tokens << h(scanner.matched)
+        else
+          tokens << h(scanner.getch)
+        end
       end
 
-      # Numbers
-      highlighted = highlighted.gsub(/\b(\d+\.?\d*)\b/, '<span class="text-blue-600">\1</span>')
-
-      # Instance variables
-      highlighted = highlighted.gsub(/(@[\w_]+)/, '<span class="text-cyan-600">\1</span>')
-
-      # Method definitions and calls with parentheses
-      highlighted = highlighted.gsub(/\b([a-z_][\w_]*[?!]?)(\()/, '<span class="text-amber-600">\1</span>\2')
-
-      highlighted.html_safe
+      tokens.join.html_safe
     end
   end
 end
