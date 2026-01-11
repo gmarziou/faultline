@@ -105,19 +105,23 @@ module Faultline
     def extract_user(env)
       config = Faultline.configuration
 
-      # Try Warden (Devise)
-      if env["warden"]&.user
-        return env["warden"].user
-      end
-
-      # Try controller context
+      # Try controller context first (more reliable)
       if env["action_controller.instance"]
         controller = env["action_controller.instance"]
         method = config.user_method
 
         if method && controller.respond_to?(method, true)
-          return controller.send(method)
+          user = controller.send(method)
+          return user if user && !user.is_a?(Array)
         end
+      end
+
+      # Try Warden (Devise) with explicit scope
+      if env["warden"]
+        user = env["warden"].user(:user) # Explicit scope
+        user ||= env["warden"].user # Fallback to default
+        # Ensure we don't return an array
+        return user if user && !user.is_a?(Array)
       end
 
       nil
