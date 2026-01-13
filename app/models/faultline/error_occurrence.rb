@@ -81,8 +81,12 @@ module Faultline
       def filter_params(params)
         filter_fields = Faultline.configuration.resolved_filter_parameters
         filter = ActiveSupport::ParameterFilter.new(filter_fields)
-        filter.filter(params.to_unsafe_h).to_json
-      rescue
+        filtered = filter.filter(params.to_unsafe_h)
+        json = filtered.to_json
+        # Truncate large params to prevent storage issues
+        json.length > 50_000 ? json[0, 50_000] + '..."truncated"}' : json
+      rescue => e
+        Rails.logger.error "[Faultline] Failed to filter params: #{e.class} - #{e.message}"
         "{}"
       end
 
