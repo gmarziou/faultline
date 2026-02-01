@@ -24,7 +24,7 @@ class CreateFaultlineErrorOccurrences < ActiveRecord::Migration<%= migration_ver
       t.string :hostname
       t.string :process_id
 
-      t.jsonb :local_variables
+      t.json :local_variables
 
       t.timestamps
     end
