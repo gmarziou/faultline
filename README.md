@@ -2,6 +2,12 @@
 
 ![Faultline](faultline.png)
 
+![Faultline Screenshot 1](faultline1.png)
+
+![Faultline Screenshot 2](faultline2.png)
+
+![Faultline Screenshot 3](faultline3.png)
+
 A self-hosted error tracking engine for Rails 8+ applications. Track errors, get notified, and resolve issues—all without external services.
 
 ## Features
