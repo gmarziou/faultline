@@ -1,0 +1,7 @@
+# Faultline - Rails Error Tracking
+# https://dlt.github.io/faultline/
+
+User-agent: *
+Allow: /
+
+Sitemap: https://dlt.github.io/faultline/sitemap.xml
