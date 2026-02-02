@@ -40,23 +40,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    code, pre { font-family: 'JetBrains Mono', monospace; }
-    .prose code { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.875em; }
-    .prose pre { background: #0f172a; border: 1px solid #1e293b; overflow-x: auto; }
-    .prose pre code { background: transparent; padding: 0; }
-    .prose a { color: #f43f5e; }
-    .prose h2 { color: #fff; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
-    .prose h3 { color: #f1f5f9; }
-    .prose h4 { color: #e2e8f0; }
-    .prose strong { color: #f1f5f9; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-950 text-slate-300 antialiased">
 
   <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
-    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
       <a href="../" class="flex items-center gap-2 text-white font-bold text-xl">
         <span class="text-2xl">⚡</span>
         <span>Faultline</span>
@@ -74,13 +63,13 @@
   <article class="pt-32 pb-20 px-6">
     <div class="max-w-3xl mx-auto">
 
-      <header class="mb-12">
-        <div class="flex items-center gap-3 text-sm text-slate-400 mb-4">
+      <header class="mb-16">
+        <div class="flex items-center gap-3 text-sm text-slate-500 mb-6">
           <time datetime="2025-02-01">February 1, 2025</time>
-          <span>•</span>
+          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
           <span>18 min read</span>
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-white leading-[1.15] mb-8">
           Rails Exception Handling Best Practices: A Complete Guide
         </h1>
         <p class="text-xl text-slate-400 leading-relaxed">
@@ -88,15 +77,15 @@
         </p>
       </header>
 
-      <div class="prose prose-lg prose-invert max-w-none">
+      <div class="article-content">
 
         <p>Exception handling is one of those areas where the gap between "it works" and "it works well" is enormous. Poor error handling leads to silent failures, frustrated users, and developers waking up to mystery bugs. Good error handling means you know about problems before your users do and have the context to fix them quickly.</p>
 
         <p>This guide covers everything from Ruby basics to production-grade Rails error handling strategies.</p>
 
-        <nav class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-8">
-          <h4 class="text-white font-semibold mb-3">Table of Contents</h4>
-          <ul class="space-y-1 text-sm">
+        <nav class="toc">
+          <h4>In this article</h4>
+          <ul>
             <li><a href="#ruby-basics">Ruby Exception Basics</a></li>
             <li><a href="#rails-specifics">Rails-Specific Error Handling</a></li>
             <li><a href="#custom-exceptions">Creating Custom Exception Classes</a></li>
@@ -113,7 +102,7 @@
 
         <h3>The Basic begin/rescue/end Block</h3>
 
-        <pre><code class="language-ruby">begin
+        <pre><code>begin
   # Code that might raise an exception
   result = risky_operation
 rescue StandardError => e
@@ -127,7 +116,7 @@ end</code></pre>
 
         <p>Ruby's exception hierarchy matters. Here's the important part:</p>
 
-        <pre><code class="language-text">Exception
+        <pre><code>Exception
 ├── NoMemoryError
 ├── SignalException
 ├── SystemExit
@@ -140,7 +129,7 @@ end</code></pre>
 
         <p><strong>Important:</strong> Always rescue <code>StandardError</code>, not <code>Exception</code>. Rescuing <code>Exception</code> catches things like <code>SignalException</code> and <code>SystemExit</code>, which breaks Ctrl+C and process management.</p>
 
-        <pre><code class="language-ruby"># Bad - catches too much
+        <pre><code># Bad - catches too much
 rescue Exception => e
 
 # Good - catches application errors
@@ -153,7 +142,7 @@ rescue => e</code></pre>
 
         <p>You can rescue different exception types with different handlers:</p>
 
-        <pre><code class="language-ruby">begin
+        <pre><code>begin
   api_response = external_api.fetch_data
 rescue Timeout::Error
   # Handle timeout specifically
@@ -171,7 +160,7 @@ end</code></pre>
 
         <p>Code in <code>ensure</code> runs whether or not an exception was raised:</p>
 
-        <pre><code class="language-ruby">def process_file(path)
+        <pre><code>def process_file(path)
   file = File.open(path)
   process(file.read)
 rescue IOError => e
@@ -184,7 +173,7 @@ end</code></pre>
 
         <p>Code in <code>else</code> runs only if no exception was raised:</p>
 
-        <pre><code class="language-ruby">begin
+        <pre><code>begin
   result = operation_that_might_fail
 rescue OperationError => e
   handle_failure(e)
@@ -199,7 +188,7 @@ end</code></pre>
 
         <p>Rails defines several exceptions you'll encounter regularly:</p>
 
-        <pre><code class="language-ruby"># Record not found (404)
+        <pre><code># Record not found (404)
 ActiveRecord::RecordNotFound
 
 # Validation failed
@@ -221,7 +210,7 @@ ActionController::InvalidAuthenticityToken</code></pre>
 
         <p>Rails 7 introduced a unified error reporting API. This is the modern way to handle errors:</p>
 
-        <pre><code class="language-ruby"># Report and swallow the error
+        <pre><code># Report and swallow the error
 Rails.error.handle do
   might_fail
 end
@@ -236,7 +225,7 @@ Rails.error.report(exception, handled: true)</code></pre>
 
         <p>You can subscribe to these errors with custom handlers:</p>
 
-        <pre><code class="language-ruby"># config/initializers/error_subscriber.rb
+        <pre><code># config/initializers/error_subscriber.rb
 class ErrorSubscriber
   def report(error, handled:, severity:, context:, source: nil)
     MyErrorTracker.capture(error, context: context)
@@ -251,7 +240,7 @@ Rails.error.subscribe(ErrorSubscriber.new)</code></pre>
 
         <h3>Basic Custom Exception</h3>
 
-        <pre><code class="language-ruby"># app/errors/application_error.rb
+        <pre><code># app/errors/application_error.rb
 class ApplicationError < StandardError
   attr_reader :code, :details
 
@@ -264,7 +253,7 @@ end</code></pre>
 
         <h3>Domain-Specific Exceptions</h3>
 
-        <pre><code class="language-ruby"># app/errors/payment_error.rb
+        <pre><code># app/errors/payment_error.rb
 class PaymentError < ApplicationError; end
 class PaymentDeclinedError < PaymentError; end
 class PaymentGatewayError < PaymentError; end
@@ -278,7 +267,7 @@ class SessionExpiredError < AuthenticationError; end</code></pre>
 
         <h3>Using Custom Exceptions</h3>
 
-        <pre><code class="language-ruby">class PaymentService
+        <pre><code>class PaymentService
   def charge(user, amount)
     response = gateway.charge(user.payment_method, amount)
 
@@ -303,7 +292,7 @@ end</code></pre>
 
         <h3>Basic rescue_from</h3>
 
-        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
+        <pre><code>class ApplicationController < ActionController::Base
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActionController::ParameterMissing, with: :bad_request
 
@@ -320,7 +309,7 @@ end</code></pre>
 
         <h3>Comprehensive Error Handling</h3>
 
-        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
+        <pre><code>class ApplicationController < ActionController::Base
   rescue_from StandardError, with: :internal_error
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
@@ -344,25 +333,6 @@ end</code></pre>
     end
   end
 
-  def forbidden
-    respond_to do |format|
-      format.html { render "errors/403", status: :forbidden }
-      format.json { render json: { error: "Forbidden" }, status: :forbidden }
-    end
-  end
-
-  def unprocessable_entity(exception)
-    respond_to do |format|
-      format.html { render :edit, status: :unprocessable_entity }
-      format.json do
-        render json: {
-          error: "Validation failed",
-          details: exception.record.errors.full_messages
-        }, status: :unprocessable_entity
-      end
-    end
-  end
-
   def internal_error(exception)
     # Log and track the error
     Rails.error.report(exception, handled: true)
@@ -378,7 +348,7 @@ end</code></pre>
 
         <p><code>rescue_from</code> handlers are matched from bottom to top. Put more specific handlers after general ones:</p>
 
-        <pre><code class="language-ruby"># This order is correct
+        <pre><code># This order is correct
 rescue_from StandardError, with: :internal_error          # Catch-all (checked last)
 rescue_from PaymentError, with: :payment_error            # More specific
 rescue_from PaymentDeclinedError, with: :payment_declined # Most specific (checked first)</code></pre>
@@ -389,7 +359,7 @@ rescue_from PaymentDeclinedError, with: :payment_declined # Most specific (check
 
         <h3>Active Job Error Handling</h3>
 
-        <pre><code class="language-ruby">class ImportDataJob < ApplicationJob
+        <pre><code>class ImportDataJob < ApplicationJob
   retry_on Timeout::Error, wait: :exponentially_longer, attempts: 5
   discard_on ActiveRecord::RecordNotFound
 
@@ -408,7 +378,7 @@ end</code></pre>
 
         <h3>Sidekiq-Specific Patterns</h3>
 
-        <pre><code class="language-ruby">class ProcessOrderJob
+        <pre><code>class ProcessOrderJob
   include Sidekiq::Job
 
   sidekiq_options retry: 5
@@ -453,15 +423,15 @@ end</code></pre>
 
         <p>For Rails applications, <a href="https://github.com/dlt/faultline">Faultline</a> provides all of these features with zero external dependencies:</p>
 
-        <pre><code class="language-ruby"># Gemfile
+        <pre><code># Gemfile
 gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
 
-        <pre><code class="language-bash">$ rails generate faultline:install
+        <pre><code>$ rails generate faultline:install
 $ rails db:migrate</code></pre>
 
         <p>Configure authentication and notifications:</p>
 
-        <pre><code class="language-ruby"># config/initializers/faultline.rb
+        <pre><code># config/initializers/faultline.rb
 Faultline.configure do |config|
   # Restrict dashboard access
   config.authenticate_with = lambda { |request|
@@ -488,7 +458,7 @@ end</code></pre>
 
         <p>Faultline automatically captures local variables at the raise point, so you can see exactly what values caused the error:</p>
 
-        <pre><code class="language-ruby">def process_order(user, items)
+        <pre><code>def process_order(user, items)
   total = calculate_total(items)
   discount = user.discount_percentage  # If user is nil...
   final_price = total * (1 - discount / 100.0)
@@ -500,7 +470,7 @@ end
 
         <p>Sometimes you want to track errors without raising them:</p>
 
-        <pre><code class="language-ruby">def sync_external_data
+        <pre><code>def sync_external_data
   response = ExternalAPI.fetch
 
   if response.partial_failure?
@@ -547,6 +517,8 @@ end</code></pre>
 
         <p>If you can handle an error gracefully, do so. If you can't, make sure it gets tracked and you get notified. Never let errors disappear silently.</p>
 
+        <hr>
+
         <h2>Conclusion</h2>
 
         <p>Good exception handling is the difference between debugging for hours and knowing exactly what went wrong in seconds. The time invested in proper error handling pays dividends every time something goes wrong in production.</p>
@@ -555,13 +527,13 @@ end</code></pre>
 
       </div>
 
-      <footer class="mt-16 pt-8 border-t border-slate-800">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-          <h3 class="text-xl font-bold text-white mb-3">Track Your Rails Errors for Free</h3>
-          <p class="text-slate-400 mb-6">Faultline captures exceptions with local variables, smart grouping, and instant notifications.</p>
-          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
+      <footer class="mt-20 pt-10 border-t border-slate-800">
+        <div class="bg-gradient-to-br from-slate-900 to-slate-900/50 border border-slate-800 rounded-2xl p-10 text-center">
+          <h3 class="text-2xl font-bold text-white mb-4">Track Your Rails Errors for Free</h3>
+          <p class="text-slate-400 mb-8 max-w-md mx-auto">Faultline captures exceptions with local variables, smart grouping, and instant notifications.</p>
+          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
             Get Started on GitHub
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
           </a>
         </div>
       </footer>
@@ -569,17 +541,16 @@ end</code></pre>
     </div>
   </article>
 
-  <footer class="py-10 px-6 border-t border-slate-800">
-    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+  <footer class="py-12 px-6 border-t border-slate-800 bg-slate-950">
+    <div class="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
       <div class="flex items-center gap-2">
         <span class="text-xl">⚡</span>
-        <span class="font-medium">Faultline</span>
-        <span class="text-slate-600">•</span>
-        <span>Open source Rails error tracking</span>
+        <span class="font-medium text-slate-400">Faultline</span>
       </div>
       <div class="flex items-center gap-6">
-        <a href="../" class="hover:text-white transition-colors">Home</a>
-        <a href="https://github.com/dlt/faultline" class="hover:text-white transition-colors">GitHub</a>
+        <a href="../" class="hover:text-slate-300 transition-colors">Home</a>
+        <a href="../#blog" class="hover:text-slate-300 transition-colors">Blog</a>
+        <a href="https://github.com/dlt/faultline" class="hover:text-slate-300 transition-colors">GitHub</a>
       </div>
     </div>
   </footer>

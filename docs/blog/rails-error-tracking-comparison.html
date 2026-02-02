@@ -39,21 +39,12 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-  <style>
-    body { font-family: 'Inter', sans-serif; }
-    code, pre { font-family: 'JetBrains Mono', monospace; }
-    .prose code { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.875em; }
-    .prose pre { background: #0f172a; border: 1px solid #1e293b; }
-    .prose a { color: #f43f5e; }
-    .prose h2 { color: #fff; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
-    .prose h3 { color: #f1f5f9; }
-    .prose strong { color: #f1f5f9; }
-  </style>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body class="bg-slate-950 text-slate-300 antialiased">
 
   <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
-    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+    <div class="max-w-3xl mx-auto px-6 py-4 flex items-center justify-between">
       <a href="../" class="flex items-center gap-2 text-white font-bold text-xl">
         <span class="text-2xl">⚡</span>
         <span>Faultline</span>
@@ -71,13 +62,13 @@
   <article class="pt-32 pb-20 px-6">
     <div class="max-w-3xl mx-auto">
 
-      <header class="mb-12">
-        <div class="flex items-center gap-3 text-sm text-slate-400 mb-4">
+      <header class="mb-16">
+        <div class="flex items-center gap-3 text-sm text-slate-500 mb-6">
           <time datetime="2025-02-01">February 1, 2025</time>
-          <span>•</span>
+          <span class="w-1 h-1 rounded-full bg-slate-600"></span>
           <span>15 min read</span>
         </div>
-        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+        <h1 class="text-4xl md:text-5xl font-bold text-white leading-[1.15] mb-8">
           Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline
         </h1>
         <p class="text-xl text-slate-400 leading-relaxed">
@@ -85,20 +76,20 @@
         </p>
       </header>
 
-      <div class="prose prose-lg prose-invert max-w-none">
+      <div class="article-content">
 
         <p>Choosing an error tracking tool for your Rails application is an important decision. You'll be living with this tool every time something goes wrong in production, so it needs to fit your workflow, budget, and technical requirements.</p>
 
         <p>In this comparison, we'll look at four popular options: <strong>Sentry</strong>, <strong>Honeybadger</strong>, <strong>Rollbar</strong>, and <strong>Faultline</strong>. We'll compare them across the dimensions that matter most for Rails developers.</p>
 
-        <nav class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-8">
-          <h4 class="text-white font-semibold mb-3">Quick Navigation</h4>
-          <ul class="space-y-1 text-sm">
+        <nav class="toc">
+          <h4>In this article</h4>
+          <ul>
             <li><a href="#tldr">TL;DR - Quick Recommendations</a></li>
             <li><a href="#overview">Tool Overview</a></li>
             <li><a href="#features">Feature Comparison</a></li>
             <li><a href="#pricing">Pricing Comparison</a></li>
-            <li><a href="#setup">Setup & Integration</a></li>
+            <li><a href="#setup">Setup &amp; Integration</a></li>
             <li><a href="#verdict">Final Verdict</a></li>
           </ul>
         </nav>
@@ -117,7 +108,9 @@
         <h2 id="overview">Tool Overview</h2>
 
         <h3>Sentry</h3>
+
         <p>Sentry is the most widely-used error tracking platform, supporting 30+ languages and frameworks. It started as an open-source Django project and has grown into a full observability platform with performance monitoring, session replay, and more.</p>
+
         <ul>
           <li><strong>Founded:</strong> 2012</li>
           <li><strong>Pricing model:</strong> Per-error with quotas</li>
@@ -126,7 +119,9 @@
         </ul>
 
         <h3>Honeybadger</h3>
+
         <p>Honeybadger is a Ruby-focused error tracking service known for its excellent developer experience and responsive support team. It's built by Rails developers for Rails developers.</p>
+
         <ul>
           <li><strong>Founded:</strong> 2012</li>
           <li><strong>Pricing model:</strong> Per-project tiers</li>
@@ -135,7 +130,9 @@
         </ul>
 
         <h3>Rollbar</h3>
+
         <p>Rollbar focuses on error tracking with strong CI/CD integration. It offers good multi-language support and emphasizes deploy tracking and version correlation.</p>
+
         <ul>
           <li><strong>Founded:</strong> 2012</li>
           <li><strong>Pricing model:</strong> Per-error with quotas</li>
@@ -144,7 +141,9 @@
         </ul>
 
         <h3>Faultline</h3>
+
         <p>Faultline is an open-source, self-hosted Rails engine that provides error tracking with local variable capture. It runs inside your existing Rails app with no external dependencies.</p>
+
         <ul>
           <li><strong>Founded:</strong> 2024</li>
           <li><strong>Pricing model:</strong> Free (open source)</li>
@@ -154,94 +153,94 @@
 
         <h2 id="features">Feature Comparison</h2>
 
-        <div class="overflow-x-auto my-8">
-          <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+          <table>
             <thead>
-              <tr class="border-b border-slate-700">
-                <th class="py-3 px-4 text-left text-slate-400 font-medium">Feature</th>
-                <th class="py-3 px-4 text-center text-slate-300">Sentry</th>
-                <th class="py-3 px-4 text-center text-slate-300">Honeybadger</th>
-                <th class="py-3 px-4 text-center text-slate-300">Rollbar</th>
-                <th class="py-3 px-4 text-center text-primary">Faultline</th>
+              <tr>
+                <th class="text-left">Feature</th>
+                <th class="text-center">Sentry</th>
+                <th class="text-center">Honeybadger</th>
+                <th class="text-center">Rollbar</th>
+                <th class="text-center" style="color: #f43f5e;">Faultline</th>
               </tr>
             </thead>
-            <tbody class="text-slate-300">
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Automatic exception capture</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Local variable capture</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Smart error grouping</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">GitHub integration</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Slack notifications</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Performance monitoring</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Session replay</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Deploy tracking</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Multi-language support</td>
-                <td class="py-3 px-4 text-center text-emerald-400">30+</td>
-                <td class="py-3 px-4 text-center text-amber-400">10+</td>
-                <td class="py-3 px-4 text-center text-emerald-400">20+</td>
-                <td class="py-3 px-4 text-center text-slate-400">Ruby only</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Self-hosted option</td>
-                <td class="py-3 px-4 text-center text-amber-400">Complex</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-emerald-400">✓ Easy</td>
+            <tbody>
+              <tr>
+                <td>Automatic exception capture</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
               </tr>
               <tr>
-                <td class="py-3 px-4">Open source</td>
-                <td class="py-3 px-4 text-center text-amber-400">BSL</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-slate-500">✗</td>
-                <td class="py-3 px-4 text-center text-emerald-400">MIT</td>
+                <td>Local variable capture</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+              </tr>
+              <tr>
+                <td>Smart error grouping</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+              </tr>
+              <tr>
+                <td>GitHub integration</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+              </tr>
+              <tr>
+                <td>Slack notifications</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+              </tr>
+              <tr>
+                <td>Performance monitoring</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+              </tr>
+              <tr>
+                <td>Session replay</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+              </tr>
+              <tr>
+                <td>Deploy tracking</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-emerald-400">&#10003;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+              </tr>
+              <tr>
+                <td>Multi-language support</td>
+                <td class="text-center text-emerald-400">30+</td>
+                <td class="text-center text-amber-400">10+</td>
+                <td class="text-center text-emerald-400">20+</td>
+                <td class="text-center text-slate-400">Ruby only</td>
+              </tr>
+              <tr>
+                <td>Self-hosted option</td>
+                <td class="text-center text-amber-400">Complex</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-emerald-400">&#10003; Easy</td>
+              </tr>
+              <tr>
+                <td>Open source</td>
+                <td class="text-center text-amber-400">BSL</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-slate-500">&#10007;</td>
+                <td class="text-center text-emerald-400">MIT</td>
               </tr>
             </tbody>
           </table>
@@ -250,59 +249,62 @@
         <h3>Feature Deep-Dive</h3>
 
         <h4>Local Variable Capture</h4>
+
         <p>One of the most valuable debugging features is seeing variable values at the point of failure. <strong>Sentry</strong>, <strong>Honeybadger</strong>, and <strong>Faultline</strong> all support this for Ruby. <strong>Rollbar</strong> does not capture local variables, which can make debugging significantly harder.</p>
 
         <p>Faultline's implementation is particularly notable because it shows variables in a side-by-side "debugger" view alongside the source code, similar to what you'd see in an IDE.</p>
 
         <h4>Performance Monitoring</h4>
+
         <p><strong>Sentry</strong> and <strong>Honeybadger</strong> have expanded into APM territory with transaction tracing and performance monitoring. If you want errors and performance in one tool, they're good choices. <strong>Rollbar</strong> and <strong>Faultline</strong> focus purely on error tracking.</p>
 
         <h4>Self-Hosting</h4>
+
         <p><strong>Sentry</strong> offers self-hosted deployment, but it requires running multiple services (Kafka, Redis, PostgreSQL, ClickHouse, etc.) and significant DevOps expertise. <strong>Faultline</strong> runs as a Rails engine in your existing app—just add the gem and run migrations. No additional infrastructure required.</p>
 
         <h2 id="pricing">Pricing Comparison</h2>
 
         <p>This is where things get interesting. Error tracking pricing can be confusing, and surprise bills are common.</p>
 
-        <div class="overflow-x-auto my-8">
-          <table class="w-full text-sm">
+        <div class="overflow-x-auto">
+          <table>
             <thead>
-              <tr class="border-b border-slate-700">
-                <th class="py-3 px-4 text-left text-slate-400 font-medium">Plan</th>
-                <th class="py-3 px-4 text-center text-slate-300">Sentry</th>
-                <th class="py-3 px-4 text-center text-slate-300">Honeybadger</th>
-                <th class="py-3 px-4 text-center text-slate-300">Rollbar</th>
-                <th class="py-3 px-4 text-center text-primary">Faultline</th>
+              <tr>
+                <th class="text-left">Plan</th>
+                <th class="text-center">Sentry</th>
+                <th class="text-center">Honeybadger</th>
+                <th class="text-center">Rollbar</th>
+                <th class="text-center" style="color: #f43f5e;">Faultline</th>
               </tr>
             </thead>
-            <tbody class="text-slate-300">
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Free tier</td>
-                <td class="py-3 px-4 text-center">5K errors/mo</td>
-                <td class="py-3 px-4 text-center">1 project</td>
-                <td class="py-3 px-4 text-center">5K errors/mo</td>
-                <td class="py-3 px-4 text-center text-emerald-400">Unlimited</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Small team</td>
-                <td class="py-3 px-4 text-center">$26/mo</td>
-                <td class="py-3 px-4 text-center">$49/mo</td>
-                <td class="py-3 px-4 text-center">$31/mo</td>
-                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
-              </tr>
-              <tr class="border-b border-slate-800">
-                <td class="py-3 px-4">Growing team</td>
-                <td class="py-3 px-4 text-center">$80/mo</td>
-                <td class="py-3 px-4 text-center">$99/mo</td>
-                <td class="py-3 px-4 text-center">$99/mo</td>
-                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
+            <tbody>
+              <tr>
+                <td>Free tier</td>
+                <td class="text-center">5K errors/mo</td>
+                <td class="text-center">1 project</td>
+                <td class="text-center">5K errors/mo</td>
+                <td class="text-center text-emerald-400">Unlimited</td>
               </tr>
               <tr>
-                <td class="py-3 px-4">Enterprise</td>
-                <td class="py-3 px-4 text-center">Custom</td>
-                <td class="py-3 px-4 text-center">Custom</td>
-                <td class="py-3 px-4 text-center">Custom</td>
-                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
+                <td>Small team</td>
+                <td class="text-center">$26/mo</td>
+                <td class="text-center">$49/mo</td>
+                <td class="text-center">$31/mo</td>
+                <td class="text-center text-emerald-400">Free</td>
+              </tr>
+              <tr>
+                <td>Growing team</td>
+                <td class="text-center">$80/mo</td>
+                <td class="text-center">$99/mo</td>
+                <td class="text-center">$99/mo</td>
+                <td class="text-center text-emerald-400">Free</td>
+              </tr>
+              <tr>
+                <td>Enterprise</td>
+                <td class="text-center">Custom</td>
+                <td class="text-center">Custom</td>
+                <td class="text-center">Custom</td>
+                <td class="text-center text-emerald-400">Free</td>
               </tr>
             </tbody>
           </table>
@@ -329,10 +331,11 @@
 
         <p>Over 5 years, that's $1,500-$3,000 in savings with Faultline. For bootstrapped startups, that's meaningful.</p>
 
-        <h2 id="setup">Setup & Integration</h2>
+        <h2 id="setup">Setup &amp; Integration</h2>
 
         <h3>Sentry</h3>
-        <pre><code class="language-ruby"># Gemfile
+
+        <pre><code># Gemfile
 gem "sentry-ruby"
 gem "sentry-rails"
 
@@ -342,18 +345,22 @@ Sentry.init do |config|
   config.breadcrumbs_logger = [:active_support_logger]
   config.traces_sample_rate = 0.5
 end</code></pre>
+
         <p>Sentry's setup is straightforward but requires configuring a DSN from their dashboard and tuning sample rates.</p>
 
         <h3>Honeybadger</h3>
-        <pre><code class="language-ruby"># Gemfile
+
+        <pre><code># Gemfile
 gem "honeybadger"
 
 # config/honeybadger.yml
-api_key: '<your api key>'</code></pre>
+api_key: '&lt;your api key&gt;'</code></pre>
+
         <p>Honeybadger has the simplest setup of the SaaS options. The Rails integration is polished.</p>
 
         <h3>Rollbar</h3>
-        <pre><code class="language-ruby"># Gemfile
+
+        <pre><code># Gemfile
 gem "rollbar"
 
 # config/initializers/rollbar.rb
@@ -361,18 +368,23 @@ Rollbar.configure do |config|
   config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
   config.environment = Rails.env
 end</code></pre>
+
         <p>Similar to Sentry. Requires token configuration and environment setup.</p>
 
         <h3>Faultline</h3>
-        <pre><code class="language-ruby"># Gemfile
+
+        <pre><code># Gemfile
 gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
-        <pre><code class="language-bash">$ rails generate faultline:install
+
+        <pre><code>$ rails generate faultline:install
 $ rails db:migrate</code></pre>
+
         <p>Faultline's setup creates the necessary migrations and initializer. No external service configuration needed. Visit <code>/faultline</code> to access the dashboard immediately.</p>
 
         <h2 id="verdict">Final Verdict: Which Should You Choose?</h2>
 
         <h3>Choose Sentry if:</h3>
+
         <ul>
           <li>You have a polyglot architecture with multiple languages</li>
           <li>You want performance monitoring and session replay in one tool</li>
@@ -381,6 +393,7 @@ $ rails db:migrate</code></pre>
         </ul>
 
         <h3>Choose Honeybadger if:</h3>
+
         <ul>
           <li>You're a Ruby-focused team and want Rails-specific tooling</li>
           <li>You value responsive, personal support</li>
@@ -389,6 +402,7 @@ $ rails db:migrate</code></pre>
         </ul>
 
         <h3>Choose Rollbar if:</h3>
+
         <ul>
           <li>Deploy tracking and release correlation are critical to your workflow</li>
           <li>You have a polyglot architecture but don't need Sentry's full platform</li>
@@ -396,6 +410,7 @@ $ rails db:migrate</code></pre>
         </ul>
 
         <h3>Choose Faultline if:</h3>
+
         <ul>
           <li>You want <strong>free, unlimited error tracking</strong> with no monthly costs</li>
           <li>You need <strong>full control over your error data</strong> (GDPR, HIPAA, SOC2)</li>
@@ -404,6 +419,8 @@ $ rails db:migrate</code></pre>
           <li>You want <strong>local variable capture</strong> for easier debugging</li>
           <li>You're a <strong>bootstrapped startup</strong> watching every dollar</li>
         </ul>
+
+        <hr>
 
         <h2>Conclusion</h2>
 
@@ -415,13 +432,13 @@ $ rails db:migrate</code></pre>
 
       </div>
 
-      <footer class="mt-16 pt-8 border-t border-slate-800">
-        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
-          <h3 class="text-xl font-bold text-white mb-3">Try Faultline Free</h3>
-          <p class="text-slate-400 mb-6">Self-hosted Rails error tracking with local variable capture. No credit card required.</p>
-          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
+      <footer class="mt-20 pt-10 border-t border-slate-800">
+        <div class="bg-gradient-to-br from-slate-900 to-slate-900/50 border border-slate-800 rounded-2xl p-10 text-center">
+          <h3 class="text-2xl font-bold text-white mb-4">Try Faultline Free</h3>
+          <p class="text-slate-400 mb-8 max-w-md mx-auto">Self-hosted Rails error tracking with local variable capture. No credit card required.</p>
+          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-8 py-4 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
             Get Started on GitHub
-            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
           </a>
         </div>
       </footer>
@@ -429,17 +446,16 @@ $ rails db:migrate</code></pre>
     </div>
   </article>
 
-  <footer class="py-10 px-6 border-t border-slate-800">
-    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+  <footer class="py-12 px-6 border-t border-slate-800 bg-slate-950">
+    <div class="max-w-3xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
       <div class="flex items-center gap-2">
         <span class="text-xl">⚡</span>
-        <span class="font-medium">Faultline</span>
-        <span class="text-slate-600">•</span>
-        <span>Open source Rails error tracking</span>
+        <span class="font-medium text-slate-400">Faultline</span>
       </div>
       <div class="flex items-center gap-6">
-        <a href="../" class="hover:text-white transition-colors">Home</a>
-        <a href="https://github.com/dlt/faultline" class="hover:text-white transition-colors">GitHub</a>
+        <a href="../" class="hover:text-slate-300 transition-colors">Home</a>
+        <a href="../#blog" class="hover:text-slate-300 transition-colors">Blog</a>
+        <a href="https://github.com/dlt/faultline" class="hover:text-slate-300 transition-colors">GitHub</a>
       </div>
     </div>
   </footer>
