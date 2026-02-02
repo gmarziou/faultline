@@ -40,6 +40,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 </head>
 <body class="bg-slate-950 text-slate-300 antialiased">
 
@@ -335,7 +336,7 @@
 
         <h3>Sentry</h3>
 
-        <pre><code># Gemfile
+        <pre><code class="language-ruby"># Gemfile
 gem "sentry-ruby"
 gem "sentry-rails"
 
@@ -350,17 +351,17 @@ end</code></pre>
 
         <h3>Honeybadger</h3>
 
-        <pre><code># Gemfile
-gem "honeybadger"
+        <pre><code class="language-ruby"># Gemfile
+gem "honeybadger"</code></pre>
 
-# config/honeybadger.yml
+        <pre><code class="language-yaml"># config/honeybadger.yml
 api_key: '&lt;your api key&gt;'</code></pre>
 
         <p>Honeybadger has the simplest setup of the SaaS options. The Rails integration is polished.</p>
 
         <h3>Rollbar</h3>
 
-        <pre><code># Gemfile
+        <pre><code class="language-ruby"># Gemfile
 gem "rollbar"
 
 # config/initializers/rollbar.rb
@@ -373,10 +374,10 @@ end</code></pre>
 
         <h3>Faultline</h3>
 
-        <pre><code># Gemfile
+        <pre><code class="language-ruby"># Gemfile
 gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
 
-        <pre><code>$ rails generate faultline:install
+        <pre><code class="language-bash">$ rails generate faultline:install
 $ rails db:migrate</code></pre>
 
         <p>Faultline's setup creates the necessary migrations and initializer. No external service configuration needed. Visit <code>/faultline</code> to access the dashboard immediately.</p>
@@ -460,5 +461,9 @@ $ rails db:migrate</code></pre>
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ruby.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </body>
 </html>
