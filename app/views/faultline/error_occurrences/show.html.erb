@@ -193,39 +193,7 @@
                 <tr class="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
                   <td class="px-3 py-2 text-amber-600 dark:text-amber-400 font-medium align-top whitespace-nowrap"><%= name %></td>
                   <td class="px-3 py-2 text-slate-700 dark:text-slate-300 align-top">
-                    <% if value.is_a?(Hash) %>
-                      <span class="text-purple-600 dark:text-purple-400">{</span>
-                      <div class="pl-3 border-l border-slate-200 dark:border-slate-700 ml-1 mt-1 space-y-0.5">
-                        <% value.each do |k, v| %>
-                          <div><span class="text-slate-500 dark:text-slate-400"><%= k %>:</span> <span class="text-emerald-600 dark:text-emerald-400"><%= v.inspect.truncate(50) %></span></div>
-                        <% end %>
-                      </div>
-                      <span class="text-purple-600 dark:text-purple-400">}</span>
-                    <% elsif value.is_a?(Array) %>
-                      <span class="text-purple-600 dark:text-purple-400">[</span><span class="text-slate-500 dark:text-slate-400"><%= value.length %> items</span><span class="text-purple-600 dark:text-purple-400">]</span>
-                      <% if value.any? %>
-                        <div class="pl-3 border-l border-slate-200 dark:border-slate-700 ml-1 mt-1 space-y-0.5">
-                          <% value.first(5).each_with_index do |v, i| %>
-                            <div><span class="text-slate-400"><%= i %>:</span> <span class="text-emerald-600 dark:text-emerald-400"><%= v.inspect.truncate(40) %></span></div>
-                          <% end %>
-                          <% if value.length > 5 %>
-                            <div class="text-slate-400 italic">... <%= value.length - 5 %> more</div>
-                          <% end %>
-                        </div>
-                      <% end %>
-                    <% elsif value.is_a?(String) && value.start_with?("[") %>
-                      <span class="text-slate-400 italic"><%= value %></span>
-                    <% elsif value.is_a?(String) %>
-                      <span class="text-emerald-600 dark:text-emerald-400">"<%= value.truncate(60) %>"</span>
-                    <% elsif value.is_a?(Numeric) %>
-                      <span class="text-blue-600 dark:text-blue-400"><%= value %></span>
-                    <% elsif value == true || value == false %>
-                      <span class="text-orange-600 dark:text-orange-400"><%= value %></span>
-                    <% elsif value.nil? %>
-                      <span class="text-slate-400">nil</span>
-                    <% else %>
-                      <span class="text-slate-600 dark:text-slate-400"><%= value.inspect.truncate(60) %></span>
-                    <% end %>
+                    <div class="var-tree-root" data-value="<%= value.to_json.gsub('"', '&quot;') %>"></div>
                   </td>
                 </tr>
               <% end %>
@@ -239,6 +207,142 @@
         <% end %>
       </div>
     </div>
+
+    <script>
+    (function() {
+      function escapeHtml(str) {
+        const div = document.createElement('div');
+        div.textContent = str;
+        return div.innerHTML;
+      }
+
+      function getPreview(value) {
+        if (value === null) return 'nil';
+        if (Array.isArray(value)) return `Array (${value.length} item${value.length !== 1 ? 's' : ''})`;
+        if (typeof value === 'object') {
+          const keys = Object.keys(value);
+          return `Object (${keys.length} key${keys.length !== 1 ? 's' : ''})`;
+        }
+        return String(value);
+      }
+
+      function renderValue(value, depth = 0) {
+        const indent = depth > 0 ? `padding-left: ${depth * 12}px;` : '';
+
+        if (value === null) {
+          return `<span class="text-slate-400">nil</span>`;
+        }
+
+        if (typeof value === 'boolean') {
+          return `<span class="text-orange-600 dark:text-orange-400">${value}</span>`;
+        }
+
+        if (typeof value === 'number') {
+          return `<span class="text-blue-600 dark:text-blue-400">${value}</span>`;
+        }
+
+        if (typeof value === 'string') {
+          if (value.startsWith('[') && value.includes('#<')) {
+            return `<span class="text-slate-400 italic">${escapeHtml(value)}</span>`;
+          }
+          const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
+          return `<span class="text-emerald-600 dark:text-emerald-400">"${escapeHtml(truncated)}"</span>`;
+        }
+
+        if (Array.isArray(value)) {
+          if (value.length === 0) {
+            return `<span class="text-purple-600 dark:text-purple-400">[]</span>`;
+          }
+          return renderCollapsible(value, 'array', depth);
+        }
+
+        if (typeof value === 'object') {
+          const keys = Object.keys(value);
+          if (keys.length === 0) {
+            return `<span class="text-purple-600 dark:text-purple-400">{}</span>`;
+          }
+          return renderCollapsible(value, 'object', depth);
+        }
+
+        return `<span class="text-slate-600 dark:text-slate-400">${escapeHtml(String(value))}</span>`;
+      }
+
+      function renderCollapsible(value, type, depth) {
+        const isArray = type === 'array';
+        const preview = getPreview(value);
+        const openBrace = isArray ? '[' : '{';
+        const closeBrace = isArray ? ']' : '}';
+
+        const toggleId = `toggle-${Math.random().toString(36).substr(2, 9)}`;
+
+        let html = `
+          <span class="var-tree-node" data-expanded="false" data-toggle-id="${toggleId}">
+            <span class="var-tree-toggle cursor-pointer select-none inline-flex items-center gap-1 hover:bg-slate-100 dark:hover:bg-slate-800 rounded px-0.5 -mx-0.5" onclick="window.toggleVarTree('${toggleId}')">
+              <span class="var-tree-arrow text-slate-400 text-[10px] transition-transform duration-150">▶</span>
+              <span class="text-purple-600 dark:text-purple-400">${openBrace}</span>
+              <span class="text-slate-500 dark:text-slate-400">${preview}</span>
+              <span class="text-purple-600 dark:text-purple-400">${closeBrace}</span>
+            </span>
+            <div class="var-tree-content hidden mt-1 pl-3 border-l border-slate-200 dark:border-slate-700 ml-1">
+        `;
+
+        if (isArray) {
+          value.forEach((item, index) => {
+            html += `
+              <div class="py-0.5">
+                <span class="text-slate-400">${index}:</span> ${renderValue(item, depth + 1)}
+              </div>
+            `;
+          });
+        } else {
+          Object.entries(value).forEach(([key, val]) => {
+            html += `
+              <div class="py-0.5">
+                <span class="text-slate-500 dark:text-slate-400">${escapeHtml(key)}:</span> ${renderValue(val, depth + 1)}
+              </div>
+            `;
+          });
+        }
+
+        html += `
+            </div>
+          </span>
+        `;
+
+        return html;
+      }
+
+      window.toggleVarTree = function(toggleId) {
+        const node = document.querySelector(`[data-toggle-id="${toggleId}"]`);
+        if (!node) return;
+
+        const isExpanded = node.dataset.expanded === 'true';
+        const content = node.querySelector('.var-tree-content');
+        const arrow = node.querySelector('.var-tree-arrow');
+
+        if (isExpanded) {
+          node.dataset.expanded = 'false';
+          content.classList.add('hidden');
+          arrow.style.transform = 'rotate(0deg)';
+        } else {
+          node.dataset.expanded = 'true';
+          content.classList.remove('hidden');
+          arrow.style.transform = 'rotate(90deg)';
+        }
+      };
+
+      document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.var-tree-root').forEach(function(root) {
+          try {
+            const value = JSON.parse(root.dataset.value);
+            root.innerHTML = renderValue(value, 0);
+          } catch (e) {
+            root.innerHTML = `<span class="text-slate-400 italic">Unable to parse value</span>`;
+          }
+        });
+      });
+    })();
+    </script>
   </div>
 <% end %>
 
