@@ -193,7 +193,7 @@
                 <tr class="hover:bg-amber-50/50 dark:hover:bg-amber-900/10">
                   <td class="px-3 py-2 text-amber-600 dark:text-amber-400 font-medium align-top whitespace-nowrap"><%= name %></td>
                   <td class="px-3 py-2 text-slate-700 dark:text-slate-300 align-top">
-                    <div class="var-tree-root" data-value="<%= value.to_json.gsub('"', '&quot;') %>"></div>
+                    <div class="var-tree-root" data-value="<%= ERB::Util.html_escape(value.to_json) %>"></div>
                   </td>
                 </tr>
               <% end %>
@@ -242,8 +242,15 @@
         }
 
         if (typeof value === 'string') {
-          if (value.startsWith('[') && value.includes('#<')) {
-            return `<span class="text-slate-400 italic">${escapeHtml(value)}</span>`;
+          // Ruby object representations (like #<User:0x123> or [#<Record>, ...])
+          if (value.includes('#<')) {
+            const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
+            return `<span class="text-slate-400 italic">${escapeHtml(truncated)}</span>`;
+          }
+          // Ruby hash-like strings (with => instead of :)
+          if (value.startsWith('{') && value.includes('=>')) {
+            const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
+            return `<span class="text-violet-600 dark:text-violet-400">${escapeHtml(truncated)}</span>`;
           }
           const truncated = value.length > 100 ? value.substring(0, 100) + '...' : value;
           return `<span class="text-emerald-600 dark:text-emerald-400">"${escapeHtml(truncated)}"</span>`;
@@ -334,10 +341,14 @@
       document.addEventListener('DOMContentLoaded', function() {
         document.querySelectorAll('.var-tree-root').forEach(function(root) {
           try {
-            const value = JSON.parse(root.dataset.value);
+            const rawValue = root.dataset.value;
+            const value = JSON.parse(rawValue);
             root.innerHTML = renderValue(value, 0);
           } catch (e) {
-            root.innerHTML = `<span class="text-slate-400 italic">Unable to parse value</span>`;
+            // Show raw value as fallback when JSON parsing fails
+            const rawValue = root.dataset.value || '';
+            const truncated = rawValue.length > 200 ? rawValue.substring(0, 200) + '...' : rawValue;
+            root.innerHTML = `<span class="text-slate-600 dark:text-slate-400 break-all">${escapeHtml(truncated)}</span>`;
           }
         });
       });
