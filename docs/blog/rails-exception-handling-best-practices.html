@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rails Exception Handling Best Practices: A Complete Guide (2025)</title>
+  <meta name="description" content="Learn Rails exception handling best practices: rescue_from, custom error classes, error tracking setup, and production debugging strategies.">
+  <meta name="keywords" content="rails exception handling, rails error handling, rescue_from rails, rails custom exceptions, ruby error handling best practices">
+  <meta name="author" content="Faultline">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dlt.github.io/faultline/blog/rails-exception-handling-best-practices.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dlt.github.io/faultline/blog/rails-exception-handling-best-practices.html">
+  <meta property="og:title" content="Rails Exception Handling Best Practices: A Complete Guide (2025)">
+  <meta property="og:description" content="Learn Rails exception handling best practices: rescue_from, custom error classes, and production debugging.">
+  <meta property="og:image" content="https://dlt.github.io/faultline/images/faultline1.jpg">
+  <meta property="article:published_time" content="2025-02-01">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rails Exception Handling Best Practices: A Complete Guide">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "TechArticle",
+    "headline": "Rails Exception Handling Best Practices: A Complete Guide (2025)",
+    "description": "Comprehensive guide to handling exceptions in Ruby on Rails applications",
+    "image": "https://dlt.github.io/faultline/images/faultline1.jpg",
+    "datePublished": "2025-02-01",
+    "author": { "@type": "Organization", "name": "Faultline" },
+    "proficiencyLevel": "Intermediate"
+  }
+  </script>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { primary: '#f43f5e' } } } }</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .prose code { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.875em; }
+    .prose pre { background: #0f172a; border: 1px solid #1e293b; overflow-x: auto; }
+    .prose pre code { background: transparent; padding: 0; }
+    .prose a { color: #f43f5e; }
+    .prose h2 { color: #fff; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
+    .prose h3 { color: #f1f5f9; }
+    .prose h4 { color: #e2e8f0; }
+    .prose strong { color: #f1f5f9; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 antialiased">
+
+  <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="../" class="flex items-center gap-2 text-white font-bold text-xl">
+        <span class="text-2xl">⚡</span>
+        <span>Faultline</span>
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="../" class="text-sm text-slate-400 hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <article class="pt-32 pb-20 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <header class="mb-12">
+        <div class="flex items-center gap-3 text-sm text-slate-400 mb-4">
+          <time datetime="2025-02-01">February 1, 2025</time>
+          <span>•</span>
+          <span>18 min read</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+          Rails Exception Handling Best Practices: A Complete Guide
+        </h1>
+        <p class="text-xl text-slate-400 leading-relaxed">
+          Everything you need to know about handling errors in Rails: from basic rescue blocks to production-grade error tracking strategies.
+        </p>
+      </header>
+
+      <div class="prose prose-lg prose-invert max-w-none">
+
+        <p>Exception handling is one of those areas where the gap between "it works" and "it works well" is enormous. Poor error handling leads to silent failures, frustrated users, and developers waking up to mystery bugs. Good error handling means you know about problems before your users do and have the context to fix them quickly.</p>
+
+        <p>This guide covers everything from Ruby basics to production-grade Rails error handling strategies.</p>
+
+        <nav class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-8">
+          <h4 class="text-white font-semibold mb-3">Table of Contents</h4>
+          <ul class="space-y-1 text-sm">
+            <li><a href="#ruby-basics">Ruby Exception Basics</a></li>
+            <li><a href="#rails-specifics">Rails-Specific Error Handling</a></li>
+            <li><a href="#custom-exceptions">Creating Custom Exception Classes</a></li>
+            <li><a href="#controller-handling">Controller-Level Handling with rescue_from</a></li>
+            <li><a href="#background-jobs">Error Handling in Background Jobs</a></li>
+            <li><a href="#error-tracking">Setting Up Error Tracking</a></li>
+            <li><a href="#best-practices">Best Practices Summary</a></li>
+          </ul>
+        </nav>
+
+        <h2 id="ruby-basics">Ruby Exception Basics</h2>
+
+        <p>Before diving into Rails-specific patterns, let's review Ruby's exception handling fundamentals.</p>
+
+        <h3>The Basic begin/rescue/end Block</h3>
+
+        <pre><code class="language-ruby">begin
+  # Code that might raise an exception
+  result = risky_operation
+rescue StandardError => e
+  # Handle the exception
+  logger.error "Operation failed: #{e.message}"
+  # Optionally re-raise
+  raise
+end</code></pre>
+
+        <h3>The Exception Hierarchy</h3>
+
+        <p>Ruby's exception hierarchy matters. Here's the important part:</p>
+
+        <pre><code class="language-text">Exception
+├── NoMemoryError
+├── SignalException
+├── SystemExit
+└── StandardError (rescue this one)
+    ├── ArgumentError
+    ├── RuntimeError
+    ├── NoMethodError
+    ├── TypeError
+    └── ... (most exceptions you'll encounter)</code></pre>
+
+        <p><strong>Important:</strong> Always rescue <code>StandardError</code>, not <code>Exception</code>. Rescuing <code>Exception</code> catches things like <code>SignalException</code> and <code>SystemExit</code>, which breaks Ctrl+C and process management.</p>
+
+        <pre><code class="language-ruby"># Bad - catches too much
+rescue Exception => e
+
+# Good - catches application errors
+rescue StandardError => e
+
+# Also good - StandardError is the default
+rescue => e</code></pre>
+
+        <h3>Multiple Rescue Clauses</h3>
+
+        <p>You can rescue different exception types with different handlers:</p>
+
+        <pre><code class="language-ruby">begin
+  api_response = external_api.fetch_data
+rescue Timeout::Error
+  # Handle timeout specifically
+  retry_with_backoff
+rescue JSON::ParserError => e
+  # Handle malformed response
+  log_and_return_default
+rescue StandardError => e
+  # Catch-all for unexpected errors
+  report_to_error_tracker(e)
+  raise
+end</code></pre>
+
+        <h3>The ensure Clause</h3>
+
+        <p>Code in <code>ensure</code> runs whether or not an exception was raised:</p>
+
+        <pre><code class="language-ruby">def process_file(path)
+  file = File.open(path)
+  process(file.read)
+rescue IOError => e
+  logger.error "Failed to read file: #{e.message}"
+ensure
+  file&.close  # Always runs
+end</code></pre>
+
+        <h3>The else Clause</h3>
+
+        <p>Code in <code>else</code> runs only if no exception was raised:</p>
+
+        <pre><code class="language-ruby">begin
+  result = operation_that_might_fail
+rescue OperationError => e
+  handle_failure(e)
+else
+  # Only runs if no exception
+  process_success(result)
+end</code></pre>
+
+        <h2 id="rails-specifics">Rails-Specific Error Handling</h2>
+
+        <h3>Common Rails Exceptions</h3>
+
+        <p>Rails defines several exceptions you'll encounter regularly:</p>
+
+        <pre><code class="language-ruby"># Record not found (404)
+ActiveRecord::RecordNotFound
+
+# Validation failed
+ActiveRecord::RecordInvalid
+
+# Routing error (404)
+ActionController::RoutingError
+
+# Missing template
+ActionView::MissingTemplate
+
+# Parameter missing
+ActionController::ParameterMissing
+
+# CSRF token invalid
+ActionController::InvalidAuthenticityToken</code></pre>
+
+        <h3>Rails Error Reporting API (Rails 7+)</h3>
+
+        <p>Rails 7 introduced a unified error reporting API. This is the modern way to handle errors:</p>
+
+        <pre><code class="language-ruby"># Report and swallow the error
+Rails.error.handle do
+  might_fail
+end
+
+# Report and re-raise the error
+Rails.error.record do
+  might_fail
+end
+
+# Report manually
+Rails.error.report(exception, handled: true)</code></pre>
+
+        <p>You can subscribe to these errors with custom handlers:</p>
+
+        <pre><code class="language-ruby"># config/initializers/error_subscriber.rb
+class ErrorSubscriber
+  def report(error, handled:, severity:, context:, source: nil)
+    MyErrorTracker.capture(error, context: context)
+  end
+end
+
+Rails.error.subscribe(ErrorSubscriber.new)</code></pre>
+
+        <h2 id="custom-exceptions">Creating Custom Exception Classes</h2>
+
+        <p>Custom exceptions make your code more expressive and errors easier to handle.</p>
+
+        <h3>Basic Custom Exception</h3>
+
+        <pre><code class="language-ruby"># app/errors/application_error.rb
+class ApplicationError < StandardError
+  attr_reader :code, :details
+
+  def initialize(message = nil, code: nil, details: {})
+    @code = code
+    @details = details
+    super(message)
+  end
+end</code></pre>
+
+        <h3>Domain-Specific Exceptions</h3>
+
+        <pre><code class="language-ruby"># app/errors/payment_error.rb
+class PaymentError < ApplicationError; end
+class PaymentDeclinedError < PaymentError; end
+class PaymentGatewayError < PaymentError; end
+class InsufficientFundsError < PaymentError; end
+
+# app/errors/authentication_error.rb
+class AuthenticationError < ApplicationError; end
+class InvalidCredentialsError < AuthenticationError; end
+class AccountLockedError < AuthenticationError; end
+class SessionExpiredError < AuthenticationError; end</code></pre>
+
+        <h3>Using Custom Exceptions</h3>
+
+        <pre><code class="language-ruby">class PaymentService
+  def charge(user, amount)
+    response = gateway.charge(user.payment_method, amount)
+
+    case response.status
+    when :success
+      response.transaction
+    when :declined
+      raise PaymentDeclinedError.new(
+        "Card was declined",
+        code: response.decline_code,
+        details: { last_four: user.payment_method.last_four }
+      )
+    when :gateway_error
+      raise PaymentGatewayError, "Gateway unavailable"
+    end
+  end
+end</code></pre>
+
+        <h2 id="controller-handling">Controller-Level Handling with rescue_from</h2>
+
+        <p>Rails controllers can handle exceptions declaratively with <code>rescue_from</code>.</p>
+
+        <h3>Basic rescue_from</h3>
+
+        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+  rescue_from ActionController::ParameterMissing, with: :bad_request
+
+  private
+
+  def not_found
+    render json: { error: "Resource not found" }, status: :not_found
+  end
+
+  def bad_request(exception)
+    render json: { error: exception.message }, status: :bad_request
+  end
+end</code></pre>
+
+        <h3>Comprehensive Error Handling</h3>
+
+        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
+  rescue_from StandardError, with: :internal_error
+  rescue_from ActiveRecord::RecordNotFound, with: :not_found
+  rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
+  rescue_from ActionController::ParameterMissing, with: :bad_request
+  rescue_from AuthenticationError, with: :unauthorized
+  rescue_from AuthorizationError, with: :forbidden
+
+  private
+
+  def not_found
+    respond_to do |format|
+      format.html { render "errors/404", status: :not_found }
+      format.json { render json: { error: "Not found" }, status: :not_found }
+    end
+  end
+
+  def unauthorized(exception)
+    respond_to do |format|
+      format.html { redirect_to login_path, alert: exception.message }
+      format.json { render json: { error: exception.message }, status: :unauthorized }
+    end
+  end
+
+  def forbidden
+    respond_to do |format|
+      format.html { render "errors/403", status: :forbidden }
+      format.json { render json: { error: "Forbidden" }, status: :forbidden }
+    end
+  end
+
+  def unprocessable_entity(exception)
+    respond_to do |format|
+      format.html { render :edit, status: :unprocessable_entity }
+      format.json do
+        render json: {
+          error: "Validation failed",
+          details: exception.record.errors.full_messages
+        }, status: :unprocessable_entity
+      end
+    end
+  end
+
+  def internal_error(exception)
+    # Log and track the error
+    Rails.error.report(exception, handled: true)
+
+    respond_to do |format|
+      format.html { render "errors/500", status: :internal_server_error }
+      format.json { render json: { error: "Internal server error" }, status: :internal_server_error }
+    end
+  end
+end</code></pre>
+
+        <h3>Order Matters</h3>
+
+        <p><code>rescue_from</code> handlers are matched from bottom to top. Put more specific handlers after general ones:</p>
+
+        <pre><code class="language-ruby"># This order is correct
+rescue_from StandardError, with: :internal_error          # Catch-all (checked last)
+rescue_from PaymentError, with: :payment_error            # More specific
+rescue_from PaymentDeclinedError, with: :payment_declined # Most specific (checked first)</code></pre>
+
+        <h2 id="background-jobs">Error Handling in Background Jobs</h2>
+
+        <p>Background jobs need special attention because there's no user waiting for a response.</p>
+
+        <h3>Active Job Error Handling</h3>
+
+        <pre><code class="language-ruby">class ImportDataJob < ApplicationJob
+  retry_on Timeout::Error, wait: :exponentially_longer, attempts: 5
+  discard_on ActiveRecord::RecordNotFound
+
+  def perform(import_id)
+    import = Import.find(import_id)
+    ImportService.new(import).process
+  rescue ImportService::ValidationError => e
+    # Don't retry validation errors
+    import.update!(status: :failed, error_message: e.message)
+  rescue StandardError => e
+    # Track unexpected errors before retrying
+    Rails.error.report(e, context: { import_id: import_id })
+    raise  # Re-raise to trigger retry
+  end
+end</code></pre>
+
+        <h3>Sidekiq-Specific Patterns</h3>
+
+        <pre><code class="language-ruby">class ProcessOrderJob
+  include Sidekiq::Job
+
+  sidekiq_options retry: 5
+
+  sidekiq_retry_in do |count, exception|
+    case exception
+    when RateLimitError
+      60 * (count + 1)  # Linear backoff for rate limits
+    else
+      (count ** 4) + 15  # Exponential backoff for others
+    end
+  end
+
+  sidekiq_retries_exhausted do |job, exception|
+    order_id = job['args'].first
+    Order.find(order_id).update!(status: :failed)
+    AdminMailer.job_failed(job, exception).deliver_later
+  end
+
+  def perform(order_id)
+    ProcessOrderService.new(order_id).call
+  end
+end</code></pre>
+
+        <h2 id="error-tracking">Setting Up Error Tracking</h2>
+
+        <p>In production, you need visibility into errors as they happen. This is where error tracking tools come in.</p>
+
+        <h3>What to Look For</h3>
+
+        <p>A good error tracking setup should provide:</p>
+
+        <ul>
+          <li><strong>Automatic capture:</strong> Unhandled exceptions should be tracked automatically</li>
+          <li><strong>Context:</strong> Request parameters, user info, and environment details</li>
+          <li><strong>Local variables:</strong> Variable values at the point of failure</li>
+          <li><strong>Grouping:</strong> Similar errors should be grouped together</li>
+          <li><strong>Notifications:</strong> Get alerted when new errors occur</li>
+        </ul>
+
+        <h3>Setting Up Faultline (Self-Hosted)</h3>
+
+        <p>For Rails applications, <a href="https://github.com/dlt/faultline">Faultline</a> provides all of these features with zero external dependencies:</p>
+
+        <pre><code class="language-ruby"># Gemfile
+gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
+
+        <pre><code class="language-bash">$ rails generate faultline:install
+$ rails db:migrate</code></pre>
+
+        <p>Configure authentication and notifications:</p>
+
+        <pre><code class="language-ruby"># config/initializers/faultline.rb
+Faultline.configure do |config|
+  # Restrict dashboard access
+  config.authenticate_with = lambda { |request|
+    request.env["warden"]&.user&.admin?
+  }
+
+  # Add Slack notifications
+  config.add_notifier(
+    Faultline::Notifiers::Slack.new(
+      webhook_url: Rails.application.credentials.slack_webhook,
+      channel: "#errors"
+    )
+  )
+
+  # Add custom context to every error
+  config.custom_context = lambda { |request, env|
+    controller = env["action_controller.instance"]
+    {
+      current_user_id: controller&.current_user&.id,
+      request_id: request.request_id
+    }
+  }
+end</code></pre>
+
+        <p>Faultline automatically captures local variables at the raise point, so you can see exactly what values caused the error:</p>
+
+        <pre><code class="language-ruby">def process_order(user, items)
+  total = calculate_total(items)
+  discount = user.discount_percentage  # If user is nil...
+  final_price = total * (1 - discount / 100.0)
+end
+
+# Faultline captures: user=nil, items=[...], total=150.0</code></pre>
+
+        <h3>Manual Error Reporting</h3>
+
+        <p>Sometimes you want to track errors without raising them:</p>
+
+        <pre><code class="language-ruby">def sync_external_data
+  response = ExternalAPI.fetch
+
+  if response.partial_failure?
+    # Track the issue but continue
+    Faultline.track(
+      ExternalAPI::PartialFailure.new(response.errors),
+      custom_data: {
+        successful_records: response.success_count,
+        failed_records: response.failure_count
+      }
+    )
+  end
+
+  process_successful_records(response.data)
+end</code></pre>
+
+        <h2 id="best-practices">Best Practices Summary</h2>
+
+        <h3>Do:</h3>
+
+        <ul>
+          <li><strong>Rescue specific exceptions</strong> when you know how to handle them</li>
+          <li><strong>Create custom exception classes</strong> for domain-specific errors</li>
+          <li><strong>Use rescue_from</strong> in controllers for clean error responses</li>
+          <li><strong>Add context</strong> when reporting errors (user ID, request ID, relevant data)</li>
+          <li><strong>Use Rails.error.report</strong> for handled errors you want to track</li>
+          <li><strong>Configure retry strategies</strong> for background jobs</li>
+          <li><strong>Set up error tracking</strong> before your first production deploy</li>
+          <li><strong>Test your error handling</strong> with intentional failures</li>
+        </ul>
+
+        <h3>Don't:</h3>
+
+        <ul>
+          <li><strong>Rescue Exception</strong>—always use StandardError</li>
+          <li><strong>Silently swallow errors</strong> with empty rescue blocks</li>
+          <li><strong>Log and forget</strong>—make errors actionable</li>
+          <li><strong>Expose internal details</strong> in user-facing error messages</li>
+          <li><strong>Retry indefinitely</strong> without backoff and limits</li>
+          <li><strong>Ignore errors in background jobs</strong>—they're just as important</li>
+        </ul>
+
+        <h3>The Golden Rule</h3>
+
+        <p>If you can handle an error gracefully, do so. If you can't, make sure it gets tracked and you get notified. Never let errors disappear silently.</p>
+
+        <h2>Conclusion</h2>
+
+        <p>Good exception handling is the difference between debugging for hours and knowing exactly what went wrong in seconds. The time invested in proper error handling pays dividends every time something goes wrong in production.</p>
+
+        <p>Start with the basics—specific rescues, custom exceptions, and <code>rescue_from</code> in controllers. Then add proper error tracking so you're never flying blind. Your future self (and your on-call rotation) will thank you.</p>
+
+      </div>
+
+      <footer class="mt-16 pt-8 border-t border-slate-800">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
+          <h3 class="text-xl font-bold text-white mb-3">Track Your Rails Errors for Free</h3>
+          <p class="text-slate-400 mb-6">Faultline captures exceptions with local variables, smart grouping, and instant notifications.</p>
+          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
+            Get Started on GitHub
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+        </div>
+      </footer>
+
+    </div>
+  </article>
+
+  <footer class="py-10 px-6 border-t border-slate-800">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">⚡</span>
+        <span class="font-medium">Faultline</span>
+        <span class="text-slate-600">•</span>
+        <span>Open source Rails error tracking</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="../" class="hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="hover:text-white transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

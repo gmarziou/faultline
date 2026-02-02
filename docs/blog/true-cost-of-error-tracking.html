@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>The True Cost of Error Tracking: SaaS vs Self-Hosted Analysis</title>
+  <meta name="description" content="A detailed cost analysis of SaaS error tracking services like Sentry and Honeybadger vs self-hosted alternatives. Calculate your potential savings.">
+  <meta name="keywords" content="error tracking cost, sentry pricing, honeybadger pricing, self-hosted error tracking, error monitoring cost analysis">
+  <meta name="author" content="Faultline">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dlt.github.io/faultline/blog/true-cost-of-error-tracking.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dlt.github.io/faultline/blog/true-cost-of-error-tracking.html">
+  <meta property="og:title" content="The True Cost of Error Tracking: SaaS vs Self-Hosted Analysis">
+  <meta property="og:description" content="A detailed cost analysis of SaaS error tracking vs self-hosted alternatives.">
+  <meta property="og:image" content="https://dlt.github.io/faultline/images/faultline1.jpg">
+  <meta property="article:published_time" content="2025-02-01">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="The True Cost of Error Tracking: SaaS vs Self-Hosted Analysis">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "The True Cost of Error Tracking: SaaS vs Self-Hosted Analysis",
+    "description": "A detailed cost analysis of SaaS error tracking services vs self-hosted alternatives",
+    "image": "https://dlt.github.io/faultline/images/faultline1.jpg",
+    "datePublished": "2025-02-01",
+    "author": { "@type": "Organization", "name": "Faultline" }
+  }
+  </script>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { primary: '#f43f5e' } } } }</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .prose code { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.875em; }
+    .prose pre { background: #0f172a; border: 1px solid #1e293b; }
+    .prose a { color: #f43f5e; }
+    .prose h2 { color: #fff; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
+    .prose h3 { color: #f1f5f9; }
+    .prose strong { color: #f1f5f9; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 antialiased">
+
+  <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="../" class="flex items-center gap-2 text-white font-bold text-xl">
+        <span class="text-2xl">⚡</span>
+        <span>Faultline</span>
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="../" class="text-sm text-slate-400 hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <article class="pt-32 pb-20 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <header class="mb-12">
+        <div class="flex items-center gap-3 text-sm text-slate-400 mb-4">
+          <time datetime="2025-02-01">February 1, 2025</time>
+          <span>•</span>
+          <span>12 min read</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+          The True Cost of Error Tracking: SaaS vs Self-Hosted Analysis
+        </h1>
+        <p class="text-xl text-slate-400 leading-relaxed">
+          Breaking down the real costs of error tracking services—and why self-hosted might save you thousands of dollars over time.
+        </p>
+      </header>
+
+      <div class="prose prose-lg prose-invert max-w-none">
+
+        <p>When you're evaluating error tracking tools, the sticker price is rarely the whole story. Per-error pricing, overage charges, seat-based licensing, and feature tiers all combine to create bills that can surprise you.</p>
+
+        <p>In this post, we'll break down the real costs of popular error tracking services and compare them to self-hosted alternatives like Faultline.</p>
+
+        <h2 id="saas-pricing">How SaaS Error Tracking Pricing Works</h2>
+
+        <p>Most error tracking services use one of these pricing models:</p>
+
+        <h3>1. Per-Error Pricing (Sentry, Rollbar)</h3>
+        <p>You pay based on the number of error events you send. This sounds fair until you realize that error volume is unpredictable and spikes when things go wrong—exactly when you can least afford extra costs.</p>
+
+        <p><strong>The trap:</strong> Deploy a buggy release on a Friday and watch your monthly quota evaporate over the weekend. You either pay overage fees or lose visibility into your app's health.</p>
+
+        <h3>2. Tier-Based Pricing (Honeybadger)</h3>
+        <p>You pay a fixed monthly fee for a certain number of errors and features. More predictable than per-error pricing, but you still hit limits.</p>
+
+        <p><strong>The trap:</strong> You're always paying for capacity you might not use, or scrambling to upgrade when you exceed limits.</p>
+
+        <h3>3. Seat-Based Pricing</h3>
+        <p>Many enterprise plans charge per developer seat. A team of 10 developers can easily pay $200+/month just for access.</p>
+
+        <h2 id="real-costs">Real-World Cost Scenarios</h2>
+
+        <p>Let's look at what you'd actually pay across different scenarios.</p>
+
+        <h3>Scenario 1: Solo Developer / Side Project</h3>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-6">
+          <p class="text-sm text-slate-400 mb-4">Assumptions: 1,000 errors/month, 1 developer, 1 project</p>
+          <table class="w-full text-sm">
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Sentry (Free)</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Honeybadger (Free)</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Rollbar (Free)</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-slate-300">Faultline</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+          </table>
+          <p class="text-sm text-slate-500 mt-4">At this scale, free tiers work fine. No real difference.</p>
+        </div>
+
+        <h3>Scenario 2: Growing Startup</h3>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-6">
+          <p class="text-sm text-slate-400 mb-4">Assumptions: 25,000 errors/month, 5 developers, 3 projects</p>
+          <table class="w-full text-sm">
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Sentry (Team)</td>
+              <td class="py-2 text-right text-amber-400">$26/mo + overages</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Honeybadger (Small)</td>
+              <td class="py-2 text-right text-amber-400">$49/mo</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Rollbar (Essentials)</td>
+              <td class="py-2 text-right text-amber-400">$31/mo + overages</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-slate-300">Faultline</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+          </table>
+          <p class="text-sm text-slate-500 mt-4"><strong>Annual savings with Faultline:</strong> $312 - $588</p>
+        </div>
+
+        <h3>Scenario 3: Established Company</h3>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-6">
+          <p class="text-sm text-slate-400 mb-4">Assumptions: 100,000 errors/month, 15 developers, 10 projects</p>
+          <table class="w-full text-sm">
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Sentry (Business)</td>
+              <td class="py-2 text-right text-red-400">$80/mo + overages (~$150-300/mo)</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Honeybadger (Medium)</td>
+              <td class="py-2 text-right text-red-400">$99/mo</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Rollbar (Advanced)</td>
+              <td class="py-2 text-right text-red-400">$99/mo + overages (~$200/mo)</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-slate-300">Faultline</td>
+              <td class="py-2 text-right text-emerald-400">$0/mo</td>
+            </tr>
+          </table>
+          <p class="text-sm text-slate-500 mt-4"><strong>Annual savings with Faultline:</strong> $1,200 - $3,600</p>
+        </div>
+
+        <h3>Scenario 4: Error Spike (The Worst Case)</h3>
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-6">
+          <p class="text-sm text-slate-400 mb-4">Assumptions: Bug causes 500,000 errors in one week</p>
+          <table class="w-full text-sm">
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Sentry (Team, 50K included)</td>
+              <td class="py-2 text-right text-red-400">$200+ in overages</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Honeybadger</td>
+              <td class="py-2 text-right text-amber-400">Rate limited (errors dropped)</td>
+            </tr>
+            <tr class="border-b border-slate-700">
+              <td class="py-2 text-slate-300">Rollbar</td>
+              <td class="py-2 text-right text-red-400">$150+ in overages</td>
+            </tr>
+            <tr>
+              <td class="py-2 text-slate-300">Faultline</td>
+              <td class="py-2 text-right text-emerald-400">$0 (your DB handles it)</td>
+            </tr>
+          </table>
+          <p class="text-sm text-slate-500 mt-4">Self-hosted tools don't charge you more when things go wrong.</p>
+        </div>
+
+        <h2 id="hidden-costs">Hidden Costs of SaaS Error Tracking</h2>
+
+        <h3>1. Overage Fees</h3>
+        <p>Per-error services charge for every error over your limit. Sentry's overage pricing can quickly add up: at $0.000290 per event, 500K extra errors = $145 extra that month.</p>
+
+        <h3>2. Lost Errors During Spikes</h3>
+        <p>Some services rate-limit or drop errors when you exceed quotas. This means you lose visibility exactly when you need it most—during an incident.</p>
+
+        <h3>3. Feature Gating</h3>
+        <p>Want custom retention? SSO? Advanced integrations? That'll be the enterprise tier. Features you might consider basic are often locked behind expensive plans.</p>
+
+        <h3>4. Data Export Costs</h3>
+        <p>Need to export your error data? Some services charge for data exports or make it intentionally difficult. Your error data becomes their leverage.</p>
+
+        <h3>5. Vendor Lock-In</h3>
+        <p>After years of building workflows around a specific tool, switching becomes expensive in terms of time and lost integrations—even if the tool's pricing becomes unreasonable.</p>
+
+        <h2 id="self-hosted-costs">What Self-Hosted Actually Costs</h2>
+
+        <p>Self-hosted isn't "free" in an absolute sense. There are real costs:</p>
+
+        <h3>Storage Costs</h3>
+        <p>Error records take up database space. A typical error record with backtrace, local variables, and request context is about 5-10 KB. At 100,000 errors/month:</p>
+
+        <ul>
+          <li>Monthly data: ~500 MB - 1 GB</li>
+          <li>With 90-day retention: ~3 GB</li>
+          <li>Database cost: Essentially negligible on most hosting plans</li>
+        </ul>
+
+        <p>If you're already running a Rails app, you already have a database. The marginal cost of error storage is near zero.</p>
+
+        <h3>Compute Costs</h3>
+        <p>With Faultline specifically, there's no additional compute cost—it runs as part of your Rails app. No separate services, no additional containers, no Kubernetes pods.</p>
+
+        <h3>Maintenance Costs</h3>
+        <p>This is where traditional self-hosted Sentry gets expensive. Running Sentry requires:</p>
+        <ul>
+          <li>Kafka cluster</li>
+          <li>ClickHouse database</li>
+          <li>Redis</li>
+          <li>PostgreSQL</li>
+          <li>Multiple application services</li>
+        </ul>
+
+        <p>DevOps time to maintain this stack can easily exceed the cost of the SaaS version.</p>
+
+        <p><strong>Faultline's approach is different:</strong> it's a Rails engine that uses your existing database. There's nothing to maintain separately. Updates come via <code>bundle update</code> like any other gem.</p>
+
+        <h2 id="total-cost">5-Year Total Cost of Ownership</h2>
+
+        <p>Let's project costs over 5 years for a typical growing startup:</p>
+
+        <div class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-6">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="py-2 text-left text-slate-400">Service</th>
+                <th class="py-2 text-right text-slate-400">Year 1</th>
+                <th class="py-2 text-right text-slate-400">Year 3</th>
+                <th class="py-2 text-right text-slate-400">Year 5</th>
+              </tr>
+            </thead>
+            <tbody class="text-slate-300">
+              <tr class="border-b border-slate-800">
+                <td class="py-2">Sentry (growing usage)</td>
+                <td class="py-2 text-right">$500</td>
+                <td class="py-2 text-right">$2,500</td>
+                <td class="py-2 text-right">$6,000</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-2">Honeybadger</td>
+                <td class="py-2 text-right">$600</td>
+                <td class="py-2 text-right">$2,400</td>
+                <td class="py-2 text-right">$5,000</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-2">Rollbar</td>
+                <td class="py-2 text-right">$400</td>
+                <td class="py-2 text-right">$2,000</td>
+                <td class="py-2 text-right">$5,500</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-2">Self-hosted Sentry</td>
+                <td class="py-2 text-right">$2,000*</td>
+                <td class="py-2 text-right">$6,000*</td>
+                <td class="py-2 text-right">$10,000*</td>
+              </tr>
+              <tr>
+                <td class="py-2 text-primary font-medium">Faultline</td>
+                <td class="py-2 text-right text-emerald-400">$0</td>
+                <td class="py-2 text-right text-emerald-400">$0</td>
+                <td class="py-2 text-right text-emerald-400">$0</td>
+              </tr>
+            </tbody>
+          </table>
+          <p class="text-xs text-slate-500 mt-4">* Self-hosted Sentry costs include infrastructure and DevOps time estimates</p>
+        </div>
+
+        <h2 id="when-saas">When SaaS Makes Sense</h2>
+
+        <p>Despite the costs, SaaS error tracking is the right choice in some situations:</p>
+
+        <ul>
+          <li><strong>Polyglot architectures:</strong> If you have services in Python, Node, Go, and Ruby, a unified platform like Sentry provides value that's hard to replicate.</li>
+          <li><strong>Enterprise requirements:</strong> SSO, audit logs, compliance certifications, and SLAs are sometimes non-negotiable.</li>
+          <li><strong>No DevOps capacity:</strong> If your team has zero appetite for managing any infrastructure, SaaS removes that burden.</li>
+          <li><strong>You need performance monitoring too:</strong> Sentry and Honeybadger bundle APM features that would require separate tools otherwise.</li>
+        </ul>
+
+        <h2 id="when-self-hosted">When Self-Hosted Wins</h2>
+
+        <p>Self-hosted error tracking is compelling when:</p>
+
+        <ul>
+          <li><strong>You're watching costs:</strong> Bootstrapped startups, indie developers, and cost-conscious teams save real money.</li>
+          <li><strong>Data privacy matters:</strong> GDPR, HIPAA, SOC2, or just philosophical preference for data ownership.</li>
+          <li><strong>You're Rails-focused:</strong> If your entire stack is Rails, you don't need multi-language support.</li>
+          <li><strong>You want simplicity:</strong> No external service dependencies, no API keys, no network failures affecting your error visibility.</li>
+          <li><strong>You value predictability:</strong> No surprise bills, no quota anxiety, no scrambling during incidents.</li>
+        </ul>
+
+        <h2 id="conclusion">Conclusion</h2>
+
+        <p>Error tracking costs add up over time. For a growing startup, SaaS error tracking can easily cost $5,000-$10,000 over five years—money that could go toward hiring, infrastructure, or product development.</p>
+
+        <p>Self-hosted alternatives like <a href="https://github.com/dlt/faultline">Faultline</a> eliminate these ongoing costs while providing the core features most Rails applications need: automatic exception capture, local variable debugging, smart grouping, and notifications.</p>
+
+        <p>The right choice depends on your specific situation, but for Rails teams looking to optimize costs without sacrificing debugging capability, self-hosted is worth serious consideration.</p>
+
+        <p>Sometimes the best tool is the one that doesn't send you a bill every month.</p>
+
+      </div>
+
+      <footer class="mt-16 pt-8 border-t border-slate-800">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
+          <h3 class="text-xl font-bold text-white mb-3">Stop Paying for Error Tracking</h3>
+          <p class="text-slate-400 mb-6">Faultline is free, open source, and takes 5 minutes to set up.</p>
+          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
+            Get Started Free
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+        </div>
+      </footer>
+
+    </div>
+  </article>
+
+  <footer class="py-10 px-6 border-t border-slate-800">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">⚡</span>
+        <span class="font-medium">Faultline</span>
+        <span class="text-slate-600">•</span>
+        <span>Open source Rails error tracking</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="../" class="hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="hover:text-white transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>

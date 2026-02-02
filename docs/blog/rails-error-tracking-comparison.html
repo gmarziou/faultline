@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline</title>
+  <meta name="description" content="Comprehensive comparison of Rails error tracking tools. Compare Sentry, Honeybadger, Rollbar, and Faultline on features, pricing, and self-hosting options.">
+  <meta name="keywords" content="rails error tracking comparison, sentry vs honeybadger, sentry vs rollbar, best error tracking rails, ruby exception monitoring">
+  <meta name="author" content="Faultline">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://dlt.github.io/faultline/blog/rails-error-tracking-comparison.html">
+
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://dlt.github.io/faultline/blog/rails-error-tracking-comparison.html">
+  <meta property="og:title" content="Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline">
+  <meta property="og:description" content="Comprehensive comparison of Rails error tracking tools. Compare features, pricing, and self-hosting options.">
+  <meta property="og:image" content="https://dlt.github.io/faultline/images/faultline1.jpg">
+  <meta property="article:published_time" content="2025-02-01">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline",
+    "description": "Comprehensive comparison of Rails error tracking tools",
+    "image": "https://dlt.github.io/faultline/images/faultline1.jpg",
+    "datePublished": "2025-02-01",
+    "author": { "@type": "Organization", "name": "Faultline" }
+  }
+  </script>
+
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>⚡</text></svg>">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>tailwind.config = { theme: { extend: { colors: { primary: '#f43f5e' } } } }</script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    code, pre { font-family: 'JetBrains Mono', monospace; }
+    .prose code { background: #1e293b; padding: 0.2em 0.4em; border-radius: 0.25rem; font-size: 0.875em; }
+    .prose pre { background: #0f172a; border: 1px solid #1e293b; }
+    .prose a { color: #f43f5e; }
+    .prose h2 { color: #fff; border-bottom: 1px solid #1e293b; padding-bottom: 0.5rem; }
+    .prose h3 { color: #f1f5f9; }
+    .prose strong { color: #f1f5f9; }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-300 antialiased">
+
+  <nav class="fixed top-0 w-full z-50 bg-slate-950/80 backdrop-blur-xl border-b border-slate-800/50">
+    <div class="max-w-4xl mx-auto px-6 py-4 flex items-center justify-between">
+      <a href="../" class="flex items-center gap-2 text-white font-bold text-xl">
+        <span class="text-2xl">⚡</span>
+        <span>Faultline</span>
+      </a>
+      <div class="flex items-center gap-6">
+        <a href="../" class="text-sm text-slate-400 hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 rounded-lg text-sm font-medium transition-colors">
+          <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24"><path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/></svg>
+          GitHub
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <article class="pt-32 pb-20 px-6">
+    <div class="max-w-3xl mx-auto">
+
+      <header class="mb-12">
+        <div class="flex items-center gap-3 text-sm text-slate-400 mb-4">
+          <time datetime="2025-02-01">February 1, 2025</time>
+          <span>•</span>
+          <span>15 min read</span>
+        </div>
+        <h1 class="text-4xl md:text-5xl font-bold text-white leading-tight mb-6">
+          Rails Error Tracking 2025: Sentry vs Honeybadger vs Rollbar vs Faultline
+        </h1>
+        <p class="text-xl text-slate-400 leading-relaxed">
+          A comprehensive comparison of the most popular error tracking solutions for Ruby on Rails, including features, pricing, and when to choose each one.
+        </p>
+      </header>
+
+      <div class="prose prose-lg prose-invert max-w-none">
+
+        <p>Choosing an error tracking tool for your Rails application is an important decision. You'll be living with this tool every time something goes wrong in production, so it needs to fit your workflow, budget, and technical requirements.</p>
+
+        <p>In this comparison, we'll look at four popular options: <strong>Sentry</strong>, <strong>Honeybadger</strong>, <strong>Rollbar</strong>, and <strong>Faultline</strong>. We'll compare them across the dimensions that matter most for Rails developers.</p>
+
+        <nav class="bg-slate-900 border border-slate-800 rounded-xl p-6 my-8">
+          <h4 class="text-white font-semibold mb-3">Quick Navigation</h4>
+          <ul class="space-y-1 text-sm">
+            <li><a href="#tldr">TL;DR - Quick Recommendations</a></li>
+            <li><a href="#overview">Tool Overview</a></li>
+            <li><a href="#features">Feature Comparison</a></li>
+            <li><a href="#pricing">Pricing Comparison</a></li>
+            <li><a href="#setup">Setup & Integration</a></li>
+            <li><a href="#verdict">Final Verdict</a></li>
+          </ul>
+        </nav>
+
+        <h2 id="tldr">TL;DR - Quick Recommendations</h2>
+
+        <p>Short on time? Here's the quick version:</p>
+
+        <ul>
+          <li><strong>Choose Sentry</strong> if you have a polyglot architecture (multiple languages), need performance monitoring, or want the most comprehensive feature set.</li>
+          <li><strong>Choose Honeybadger</strong> if you want excellent Rails-specific tooling, great support, and don't mind paying for quality.</li>
+          <li><strong>Choose Rollbar</strong> if you need strong CI/CD integration and deploy tracking features.</li>
+          <li><strong>Choose Faultline</strong> if you want self-hosted, free, open-source error tracking with local variable capture and full data control.</li>
+        </ul>
+
+        <h2 id="overview">Tool Overview</h2>
+
+        <h3>Sentry</h3>
+        <p>Sentry is the most widely-used error tracking platform, supporting 30+ languages and frameworks. It started as an open-source Django project and has grown into a full observability platform with performance monitoring, session replay, and more.</p>
+        <ul>
+          <li><strong>Founded:</strong> 2012</li>
+          <li><strong>Pricing model:</strong> Per-error with quotas</li>
+          <li><strong>Self-hosted:</strong> Available (but complex)</li>
+          <li><strong>Best for:</strong> Teams with multiple languages/frameworks</li>
+        </ul>
+
+        <h3>Honeybadger</h3>
+        <p>Honeybadger is a Ruby-focused error tracking service known for its excellent developer experience and responsive support team. It's built by Rails developers for Rails developers.</p>
+        <ul>
+          <li><strong>Founded:</strong> 2012</li>
+          <li><strong>Pricing model:</strong> Per-project tiers</li>
+          <li><strong>Self-hosted:</strong> Not available</li>
+          <li><strong>Best for:</strong> Ruby/Rails teams who want premium support</li>
+        </ul>
+
+        <h3>Rollbar</h3>
+        <p>Rollbar focuses on error tracking with strong CI/CD integration. It offers good multi-language support and emphasizes deploy tracking and version correlation.</p>
+        <ul>
+          <li><strong>Founded:</strong> 2012</li>
+          <li><strong>Pricing model:</strong> Per-error with quotas</li>
+          <li><strong>Self-hosted:</strong> Not available</li>
+          <li><strong>Best for:</strong> Teams with frequent deploys who want release correlation</li>
+        </ul>
+
+        <h3>Faultline</h3>
+        <p>Faultline is an open-source, self-hosted Rails engine that provides error tracking with local variable capture. It runs inside your existing Rails app with no external dependencies.</p>
+        <ul>
+          <li><strong>Founded:</strong> 2024</li>
+          <li><strong>Pricing model:</strong> Free (open source)</li>
+          <li><strong>Self-hosted:</strong> Yes (only option)</li>
+          <li><strong>Best for:</strong> Rails teams wanting free, self-hosted error tracking</li>
+        </ul>
+
+        <h2 id="features">Feature Comparison</h2>
+
+        <div class="overflow-x-auto my-8">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="py-3 px-4 text-left text-slate-400 font-medium">Feature</th>
+                <th class="py-3 px-4 text-center text-slate-300">Sentry</th>
+                <th class="py-3 px-4 text-center text-slate-300">Honeybadger</th>
+                <th class="py-3 px-4 text-center text-slate-300">Rollbar</th>
+                <th class="py-3 px-4 text-center text-primary">Faultline</th>
+              </tr>
+            </thead>
+            <tbody class="text-slate-300">
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Automatic exception capture</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Local variable capture</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Smart error grouping</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">GitHub integration</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Slack notifications</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Performance monitoring</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Session replay</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Deploy tracking</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Multi-language support</td>
+                <td class="py-3 px-4 text-center text-emerald-400">30+</td>
+                <td class="py-3 px-4 text-center text-amber-400">10+</td>
+                <td class="py-3 px-4 text-center text-emerald-400">20+</td>
+                <td class="py-3 px-4 text-center text-slate-400">Ruby only</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Self-hosted option</td>
+                <td class="py-3 px-4 text-center text-amber-400">Complex</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-emerald-400">✓ Easy</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4">Open source</td>
+                <td class="py-3 px-4 text-center text-amber-400">BSL</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-slate-500">✗</td>
+                <td class="py-3 px-4 text-center text-emerald-400">MIT</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>Feature Deep-Dive</h3>
+
+        <h4>Local Variable Capture</h4>
+        <p>One of the most valuable debugging features is seeing variable values at the point of failure. <strong>Sentry</strong>, <strong>Honeybadger</strong>, and <strong>Faultline</strong> all support this for Ruby. <strong>Rollbar</strong> does not capture local variables, which can make debugging significantly harder.</p>
+
+        <p>Faultline's implementation is particularly notable because it shows variables in a side-by-side "debugger" view alongside the source code, similar to what you'd see in an IDE.</p>
+
+        <h4>Performance Monitoring</h4>
+        <p><strong>Sentry</strong> and <strong>Honeybadger</strong> have expanded into APM territory with transaction tracing and performance monitoring. If you want errors and performance in one tool, they're good choices. <strong>Rollbar</strong> and <strong>Faultline</strong> focus purely on error tracking.</p>
+
+        <h4>Self-Hosting</h4>
+        <p><strong>Sentry</strong> offers self-hosted deployment, but it requires running multiple services (Kafka, Redis, PostgreSQL, ClickHouse, etc.) and significant DevOps expertise. <strong>Faultline</strong> runs as a Rails engine in your existing app—just add the gem and run migrations. No additional infrastructure required.</p>
+
+        <h2 id="pricing">Pricing Comparison</h2>
+
+        <p>This is where things get interesting. Error tracking pricing can be confusing, and surprise bills are common.</p>
+
+        <div class="overflow-x-auto my-8">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-slate-700">
+                <th class="py-3 px-4 text-left text-slate-400 font-medium">Plan</th>
+                <th class="py-3 px-4 text-center text-slate-300">Sentry</th>
+                <th class="py-3 px-4 text-center text-slate-300">Honeybadger</th>
+                <th class="py-3 px-4 text-center text-slate-300">Rollbar</th>
+                <th class="py-3 px-4 text-center text-primary">Faultline</th>
+              </tr>
+            </thead>
+            <tbody class="text-slate-300">
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Free tier</td>
+                <td class="py-3 px-4 text-center">5K errors/mo</td>
+                <td class="py-3 px-4 text-center">1 project</td>
+                <td class="py-3 px-4 text-center">5K errors/mo</td>
+                <td class="py-3 px-4 text-center text-emerald-400">Unlimited</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Small team</td>
+                <td class="py-3 px-4 text-center">$26/mo</td>
+                <td class="py-3 px-4 text-center">$49/mo</td>
+                <td class="py-3 px-4 text-center">$31/mo</td>
+                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
+              </tr>
+              <tr class="border-b border-slate-800">
+                <td class="py-3 px-4">Growing team</td>
+                <td class="py-3 px-4 text-center">$80/mo</td>
+                <td class="py-3 px-4 text-center">$99/mo</td>
+                <td class="py-3 px-4 text-center">$99/mo</td>
+                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
+              </tr>
+              <tr>
+                <td class="py-3 px-4">Enterprise</td>
+                <td class="py-3 px-4 text-center">Custom</td>
+                <td class="py-3 px-4 text-center">Custom</td>
+                <td class="py-3 px-4 text-center">Custom</td>
+                <td class="py-3 px-4 text-center text-emerald-400">Free</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>The Hidden Cost: Error Volume</h3>
+
+        <p>The tricky thing about error tracking pricing is that you pay more when things go wrong. Deploy a bug that affects every request? Your error volume spikes, and so does your bill.</p>
+
+        <p><strong>Sentry</strong> and <strong>Rollbar</strong> both use per-error pricing, which means costs can spike unpredictably. <strong>Honeybadger</strong> uses project-based pricing with error limits, which is more predictable but still has caps.</p>
+
+        <p><strong>Faultline</strong> has no per-error costs because it uses your existing database. The only cost is storage, which is negligible for most applications.</p>
+
+        <h3>Annual Cost Comparison</h3>
+
+        <p>For a typical Rails app with moderate error volume:</p>
+
+        <ul>
+          <li><strong>Sentry Team:</strong> ~$312/year ($26/mo)</li>
+          <li><strong>Honeybadger Small:</strong> ~$588/year ($49/mo)</li>
+          <li><strong>Rollbar Essentials:</strong> ~$372/year ($31/mo)</li>
+          <li><strong>Faultline:</strong> $0/year</li>
+        </ul>
+
+        <p>Over 5 years, that's $1,500-$3,000 in savings with Faultline. For bootstrapped startups, that's meaningful.</p>
+
+        <h2 id="setup">Setup & Integration</h2>
+
+        <h3>Sentry</h3>
+        <pre><code class="language-ruby"># Gemfile
+gem "sentry-ruby"
+gem "sentry-rails"
+
+# config/initializers/sentry.rb
+Sentry.init do |config|
+  config.dsn = 'https://xxx@sentry.io/xxx'
+  config.breadcrumbs_logger = [:active_support_logger]
+  config.traces_sample_rate = 0.5
+end</code></pre>
+        <p>Sentry's setup is straightforward but requires configuring a DSN from their dashboard and tuning sample rates.</p>
+
+        <h3>Honeybadger</h3>
+        <pre><code class="language-ruby"># Gemfile
+gem "honeybadger"
+
+# config/honeybadger.yml
+api_key: '<your api key>'</code></pre>
+        <p>Honeybadger has the simplest setup of the SaaS options. The Rails integration is polished.</p>
+
+        <h3>Rollbar</h3>
+        <pre><code class="language-ruby"># Gemfile
+gem "rollbar"
+
+# config/initializers/rollbar.rb
+Rollbar.configure do |config|
+  config.access_token = ENV['ROLLBAR_ACCESS_TOKEN']
+  config.environment = Rails.env
+end</code></pre>
+        <p>Similar to Sentry. Requires token configuration and environment setup.</p>
+
+        <h3>Faultline</h3>
+        <pre><code class="language-ruby"># Gemfile
+gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
+        <pre><code class="language-bash">$ rails generate faultline:install
+$ rails db:migrate</code></pre>
+        <p>Faultline's setup creates the necessary migrations and initializer. No external service configuration needed. Visit <code>/faultline</code> to access the dashboard immediately.</p>
+
+        <h2 id="verdict">Final Verdict: Which Should You Choose?</h2>
+
+        <h3>Choose Sentry if:</h3>
+        <ul>
+          <li>You have a polyglot architecture with multiple languages</li>
+          <li>You want performance monitoring and session replay in one tool</li>
+          <li>You need enterprise features like SSO and audit logs</li>
+          <li>Budget isn't a primary concern</li>
+        </ul>
+
+        <h3>Choose Honeybadger if:</h3>
+        <ul>
+          <li>You're a Ruby-focused team and want Rails-specific tooling</li>
+          <li>You value responsive, personal support</li>
+          <li>You want uptime monitoring bundled with error tracking</li>
+          <li>You prefer a simpler, less bloated interface</li>
+        </ul>
+
+        <h3>Choose Rollbar if:</h3>
+        <ul>
+          <li>Deploy tracking and release correlation are critical to your workflow</li>
+          <li>You have a polyglot architecture but don't need Sentry's full platform</li>
+          <li>You want strong CI/CD integration</li>
+        </ul>
+
+        <h3>Choose Faultline if:</h3>
+        <ul>
+          <li>You want <strong>free, unlimited error tracking</strong> with no monthly costs</li>
+          <li>You need <strong>full control over your error data</strong> (GDPR, HIPAA, SOC2)</li>
+          <li>You're running a <strong>Rails-only application</strong></li>
+          <li>You prefer <strong>self-hosted solutions</strong> without vendor lock-in</li>
+          <li>You want <strong>local variable capture</strong> for easier debugging</li>
+          <li>You're a <strong>bootstrapped startup</strong> watching every dollar</li>
+        </ul>
+
+        <h2>Conclusion</h2>
+
+        <p>There's no universally "best" error tracking tool. The right choice depends on your team's size, budget, technical requirements, and preferences.</p>
+
+        <p>For Rails developers who want a simple, free, self-hosted solution that captures local variables and just works, <a href="https://github.com/dlt/faultline">Faultline</a> is worth trying. For teams with complex requirements and budget for SaaS tools, Sentry and Honeybadger are excellent choices.</p>
+
+        <p>The most important thing is to have <em>something</em> tracking your errors. Flying blind in production is never a good idea.</p>
+
+      </div>
+
+      <footer class="mt-16 pt-8 border-t border-slate-800">
+        <div class="bg-slate-900 border border-slate-800 rounded-2xl p-8 text-center">
+          <h3 class="text-xl font-bold text-white mb-3">Try Faultline Free</h3>
+          <p class="text-slate-400 mb-6">Self-hosted Rails error tracking with local variable capture. No credit card required.</p>
+          <a href="https://github.com/dlt/faultline" class="inline-flex items-center gap-2 px-6 py-3 bg-primary hover:bg-primary/90 text-white font-semibold rounded-xl transition-colors">
+            Get Started on GitHub
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"/></svg>
+          </a>
+        </div>
+      </footer>
+
+    </div>
+  </article>
+
+  <footer class="py-10 px-6 border-t border-slate-800">
+    <div class="max-w-4xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-400">
+      <div class="flex items-center gap-2">
+        <span class="text-xl">⚡</span>
+        <span class="font-medium">Faultline</span>
+        <span class="text-slate-600">•</span>
+        <span>Open source Rails error tracking</span>
+      </div>
+      <div class="flex items-center gap-6">
+        <a href="../" class="hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/dlt/faultline" class="hover:text-white transition-colors">GitHub</a>
+      </div>
+    </div>
+  </footer>
+
+</body>
+</html>
