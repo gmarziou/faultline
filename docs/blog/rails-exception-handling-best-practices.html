@@ -41,6 +41,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css">
 </head>
 <body class="bg-slate-950 text-slate-300 antialiased">
 
@@ -102,7 +103,7 @@
 
         <h3>The Basic begin/rescue/end Block</h3>
 
-        <pre><code>begin
+        <pre><code class="language-ruby">begin
   # Code that might raise an exception
   result = risky_operation
 rescue StandardError => e
@@ -116,7 +117,7 @@ end</code></pre>
 
         <p>Ruby's exception hierarchy matters. Here's the important part:</p>
 
-        <pre><code>Exception
+        <pre><code class="language-plaintext">Exception
 ├── NoMemoryError
 ├── SignalException
 ├── SystemExit
@@ -129,7 +130,7 @@ end</code></pre>
 
         <p><strong>Important:</strong> Always rescue <code>StandardError</code>, not <code>Exception</code>. Rescuing <code>Exception</code> catches things like <code>SignalException</code> and <code>SystemExit</code>, which breaks Ctrl+C and process management.</p>
 
-        <pre><code># Bad - catches too much
+        <pre><code class="language-ruby"># Bad - catches too much
 rescue Exception => e
 
 # Good - catches application errors
@@ -142,7 +143,7 @@ rescue => e</code></pre>
 
         <p>You can rescue different exception types with different handlers:</p>
 
-        <pre><code>begin
+        <pre><code class="language-ruby">begin
   api_response = external_api.fetch_data
 rescue Timeout::Error
   # Handle timeout specifically
@@ -160,7 +161,7 @@ end</code></pre>
 
         <p>Code in <code>ensure</code> runs whether or not an exception was raised:</p>
 
-        <pre><code>def process_file(path)
+        <pre><code class="language-ruby">def process_file(path)
   file = File.open(path)
   process(file.read)
 rescue IOError => e
@@ -173,7 +174,7 @@ end</code></pre>
 
         <p>Code in <code>else</code> runs only if no exception was raised:</p>
 
-        <pre><code>begin
+        <pre><code class="language-ruby">begin
   result = operation_that_might_fail
 rescue OperationError => e
   handle_failure(e)
@@ -188,7 +189,7 @@ end</code></pre>
 
         <p>Rails defines several exceptions you'll encounter regularly:</p>
 
-        <pre><code># Record not found (404)
+        <pre><code class="language-ruby"># Record not found (404)
 ActiveRecord::RecordNotFound
 
 # Validation failed
@@ -210,7 +211,7 @@ ActionController::InvalidAuthenticityToken</code></pre>
 
         <p>Rails 7 introduced a unified error reporting API. This is the modern way to handle errors:</p>
 
-        <pre><code># Report and swallow the error
+        <pre><code class="language-ruby"># Report and swallow the error
 Rails.error.handle do
   might_fail
 end
@@ -225,7 +226,7 @@ Rails.error.report(exception, handled: true)</code></pre>
 
         <p>You can subscribe to these errors with custom handlers:</p>
 
-        <pre><code># config/initializers/error_subscriber.rb
+        <pre><code class="language-ruby"># config/initializers/error_subscriber.rb
 class ErrorSubscriber
   def report(error, handled:, severity:, context:, source: nil)
     MyErrorTracker.capture(error, context: context)
@@ -240,7 +241,7 @@ Rails.error.subscribe(ErrorSubscriber.new)</code></pre>
 
         <h3>Basic Custom Exception</h3>
 
-        <pre><code># app/errors/application_error.rb
+        <pre><code class="language-ruby"># app/errors/application_error.rb
 class ApplicationError < StandardError
   attr_reader :code, :details
 
@@ -253,7 +254,7 @@ end</code></pre>
 
         <h3>Domain-Specific Exceptions</h3>
 
-        <pre><code># app/errors/payment_error.rb
+        <pre><code class="language-ruby"># app/errors/payment_error.rb
 class PaymentError < ApplicationError; end
 class PaymentDeclinedError < PaymentError; end
 class PaymentGatewayError < PaymentError; end
@@ -267,7 +268,7 @@ class SessionExpiredError < AuthenticationError; end</code></pre>
 
         <h3>Using Custom Exceptions</h3>
 
-        <pre><code>class PaymentService
+        <pre><code class="language-ruby">class PaymentService
   def charge(user, amount)
     response = gateway.charge(user.payment_method, amount)
 
@@ -292,7 +293,7 @@ end</code></pre>
 
         <h3>Basic rescue_from</h3>
 
-        <pre><code>class ApplicationController < ActionController::Base
+        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActionController::ParameterMissing, with: :bad_request
 
@@ -309,7 +310,7 @@ end</code></pre>
 
         <h3>Comprehensive Error Handling</h3>
 
-        <pre><code>class ApplicationController < ActionController::Base
+        <pre><code class="language-ruby">class ApplicationController < ActionController::Base
   rescue_from StandardError, with: :internal_error
   rescue_from ActiveRecord::RecordNotFound, with: :not_found
   rescue_from ActiveRecord::RecordInvalid, with: :unprocessable_entity
@@ -348,7 +349,7 @@ end</code></pre>
 
         <p><code>rescue_from</code> handlers are matched from bottom to top. Put more specific handlers after general ones:</p>
 
-        <pre><code># This order is correct
+        <pre><code class="language-ruby"># This order is correct
 rescue_from StandardError, with: :internal_error          # Catch-all (checked last)
 rescue_from PaymentError, with: :payment_error            # More specific
 rescue_from PaymentDeclinedError, with: :payment_declined # Most specific (checked first)</code></pre>
@@ -359,7 +360,7 @@ rescue_from PaymentDeclinedError, with: :payment_declined # Most specific (check
 
         <h3>Active Job Error Handling</h3>
 
-        <pre><code>class ImportDataJob < ApplicationJob
+        <pre><code class="language-ruby">class ImportDataJob < ApplicationJob
   retry_on Timeout::Error, wait: :exponentially_longer, attempts: 5
   discard_on ActiveRecord::RecordNotFound
 
@@ -378,7 +379,7 @@ end</code></pre>
 
         <h3>Sidekiq-Specific Patterns</h3>
 
-        <pre><code>class ProcessOrderJob
+        <pre><code class="language-ruby">class ProcessOrderJob
   include Sidekiq::Job
 
   sidekiq_options retry: 5
@@ -423,15 +424,15 @@ end</code></pre>
 
         <p>For Rails applications, <a href="https://github.com/dlt/faultline">Faultline</a> provides all of these features with zero external dependencies:</p>
 
-        <pre><code># Gemfile
+        <pre><code class="language-ruby"># Gemfile
 gem "faultline", git: "https://github.com/dlt/faultline.git"</code></pre>
 
-        <pre><code>$ rails generate faultline:install
+        <pre><code class="language-bash">$ rails generate faultline:install
 $ rails db:migrate</code></pre>
 
         <p>Configure authentication and notifications:</p>
 
-        <pre><code># config/initializers/faultline.rb
+        <pre><code class="language-ruby"># config/initializers/faultline.rb
 Faultline.configure do |config|
   # Restrict dashboard access
   config.authenticate_with = lambda { |request|
@@ -458,7 +459,7 @@ end</code></pre>
 
         <p>Faultline automatically captures local variables at the raise point, so you can see exactly what values caused the error:</p>
 
-        <pre><code>def process_order(user, items)
+        <pre><code class="language-ruby">def process_order(user, items)
   total = calculate_total(items)
   discount = user.discount_percentage  # If user is nil...
   final_price = total * (1 - discount / 100.0)
@@ -470,7 +471,7 @@ end
 
         <p>Sometimes you want to track errors without raising them:</p>
 
-        <pre><code>def sync_external_data
+        <pre><code class="language-ruby">def sync_external_data
   response = ExternalAPI.fetch
 
   if response.partial_failure?
@@ -555,5 +556,8 @@ end</code></pre>
     </div>
   </footer>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-ruby.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-bash.min.js"></script>
 </body>
 </html>
