@@ -13,6 +13,7 @@ require "faultline/notifiers/telegram"
 require "faultline/notifiers/slack"
 require "faultline/notifiers/webhook"
 require "faultline/notifiers/resend"
+require "faultline/notifiers/email"
 
 module Faultline
   class << self

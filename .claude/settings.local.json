@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(for f in *.png)",
+      "Bash(do)",
+      "Bash(echo:*)",
+      "Bash(convert:*)",
+      "Bash(done)",
+      "Bash(ls:*)",
+      "Bash(bundle exec rspec:*)"
+    ]
+  }
+}
