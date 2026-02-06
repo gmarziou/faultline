@@ -25,6 +25,7 @@ A self-hosted error tracking engine for Rails 8+ applications. Track errors, get
 - **Standalone Dashboard** - Clean Tailwind UI with interactive charts and time-range zooming
 - **Configurable Authentication** - Integrate with Devise, Warden, or custom auth
 - **Request Context** - Capture URL, params, headers, user info, and custom data
+- **Basic APM** - Track response times, throughput, and database query counts per endpoint
 
 ## Requirements
 
@@ -322,11 +323,15 @@ config.add_notifier(MyNotifier.new(api_key: "..."))
 
 ## Database Tables
 
-The engine creates three tables:
+The engine creates three tables for error tracking:
 
 - `faultline_error_groups` - Grouped errors by fingerprint
 - `faultline_error_occurrences` - Individual error instances
 - `faultline_error_contexts` - Custom key-value context data
+
+And one table for APM (if enabled):
+
+- `faultline_request_traces` - Individual request performance data
 
 ## Data Retention
 
@@ -346,6 +351,159 @@ Faultline::ErrorOccurrence
   .delete_all
 ```
 
+## APM (Application Performance Monitoring)
+
+Faultline includes basic APM to track request performance alongside your errors. It's lightweight, automatic, and requires no code changes.
+
+### What It Tracks
+
+| Metric | Description |
+|--------|-------------|
+| Response time | Total request duration (ms) |
+| Database time | Time spent in ActiveRecord queries (ms) |
+| View time | Time spent rendering views (ms) |
+| Query count | Number of SQL queries per request |
+| Status codes | HTTP response status (200, 500, etc.) |
+| Throughput | Requests per minute/hour |
+
+### How It Works
+
+APM hooks into Rails' built-in `ActiveSupport::Notifications`:
+
+```
+Your Rails App (no changes needed)
+         │
+         ▼
+Rails fires "process_action.action_controller" after each request
+Rails fires "sql.active_record" for each SQL query
+         │
+         ▼
+Faultline::Apm::Collector listens and stores metrics
+         │
+         ▼
+Dashboard at /faultline/performance
+```
+
+No manual instrumentation required—Rails already emits these events for every request.
+
+### Enabling APM
+
+APM is **opt-in** and disabled by default:
+
+```ruby
+# config/initializers/faultline.rb
+Faultline.configure do |config|
+  config.enable_apm = true
+end
+```
+
+Then run migrations (if you haven't already):
+
+```bash
+rails db:migrate
+```
+
+Visit `/faultline/performance` to see the dashboard.
+
+### Configuration Options
+
+```ruby
+Faultline.configure do |config|
+  # Enable APM (default: false)
+  config.enable_apm = true
+
+  # Sample rate: 1.0 = 100%, 0.1 = 10% (default: 1.0)
+  # Use sampling for high-traffic apps to reduce storage/overhead
+  config.apm_sample_rate = 1.0
+
+  # Paths to ignore (default: falls back to middleware_ignore_paths)
+  # Faultline's own routes are always ignored
+  config.apm_ignore_paths = ["/health", "/assets", "/up"]
+
+  # Data retention in days (default: 30)
+  config.apm_retention_days = 30
+end
+```
+
+### Dashboard Features
+
+**Index page** (`/faultline/performance`):
+- Summary stats: total requests, avg response time, p95, error rate
+- Response time chart (avg/min/max over time)
+- Throughput chart (requests per time bucket)
+- Slowest endpoints table with avg, p95, request count, error rate
+- Time period selector: 1h, 6h, 24h, 7d, 30d
+
+**Endpoint detail page** (`/faultline/performance/UsersController%23show`):
+- Stats for a single endpoint
+- Response time chart for that endpoint
+- Individual request traces (paginated, sorted by duration)
+
+### Data Cleanup
+
+APM data is cleaned up separately from error data:
+
+```bash
+# Run manually
+rails faultline:apm:cleanup
+
+# Or schedule it (cron, Sidekiq, etc.)
+Faultline::RequestTrace.cleanup!  # Uses apm_retention_days
+Faultline::RequestTrace.cleanup!(before: 7.days.ago)  # Custom
+```
+
+### Performance Overhead
+
+| Traffic | Sample Rate | Overhead | Recommendation |
+|---------|-------------|----------|----------------|
+| Low (<10 req/sec) | 1.0 | ~1-5ms/request | Use 100% |
+| Medium (<100 req/sec) | 1.0 | ~1-5ms/request | Use 100% |
+| High (<1000 req/sec) | 0.5 | ~1-5ms/request | Use 50% |
+| Very high (1000+ req/sec) | 0.1 | ~1-5ms/request | Use 10% |
+
+The overhead is:
+- **~0.01ms per SQL query** for counting
+- **~1-5ms per request** for the database INSERT (after response is sent)
+
+The INSERT happens *after* Rails sends the response, so users don't wait for it.
+
+### Caveats & Limitations
+
+1. **Not a full APM replacement** — This is basic request-level monitoring. It doesn't provide:
+   - Distributed tracing across services
+   - Memory/CPU profiling
+   - N+1 query detection
+   - External service call tracking (Redis, HTTP, etc.)
+
+2. **Dashboard queries can be slow at scale** — With millions of traces, aggregate queries take longer. Mitigations:
+   - Use shorter time periods (1h, 6h instead of 30d)
+   - Use sampling to reduce data volume
+   - Dashboard results are cached for 1 minute
+
+3. **P95 calculation** — PostgreSQL uses native `PERCENTILE_CONT` (fast). SQLite/MySQL fall back to `ORDER BY + OFFSET` (slower on large datasets).
+
+4. **Storage grows with traffic** — At 100 req/sec with 100% sampling:
+   - ~8.6M rows/day
+   - ~260M rows/month
+   - Use `apm_retention_days` and sampling to manage this
+
+5. **No alerting** — APM doesn't have its own alerting. Use error tracking notifications for 5xx responses, or build custom alerts from the data.
+
+### When to Use Faultline APM
+
+**Good fit:**
+- Rails monoliths wanting basic performance visibility
+- Teams already using Faultline for errors
+- Projects avoiding external APM services (cost, privacy)
+- Development/staging environments
+
+**Consider dedicated APM if you need:**
+- Distributed tracing (microservices)
+- Detailed profiling (memory, CPU, GC)
+- External service monitoring (Redis, Elasticsearch, HTTP)
+- Advanced alerting on performance metrics
+- Historical data over months/years
+
 ## Comparison with Alternatives
 
 | Feature | Faultline | Solid Errors | Sentry | Honeybadger | Rollbar |
@@ -359,7 +517,7 @@ Faultline::ErrorOccurrence
 | Notifications | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Error grouping | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Source maps (JS) | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Performance/APM | ❌ | ❌ | ✅ | ✅ | ❌ |
+| Performance/APM | ⚠️ Basic | ❌ | ✅ Full | ✅ Full | ❌ |
 | Multi-language | Ruby | Ruby | 30+ | 10+ | 20+ |
 
 **Faultline is ideal for:**
