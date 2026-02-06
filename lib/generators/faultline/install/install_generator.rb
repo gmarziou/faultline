@@ -26,6 +26,8 @@ module Faultline
                            "db/migrate/create_faultline_error_occurrences.rb"
         migration_template "migrations/create_faultline_error_contexts.rb.tt",
                            "db/migrate/create_faultline_error_contexts.rb"
+        migration_template "migrations/create_faultline_request_traces.rb.tt",
+                           "db/migrate/create_faultline_request_traces.rb"
       end
 
       def add_route

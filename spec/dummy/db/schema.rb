@@ -55,6 +55,21 @@ ActiveRecord::Schema[8.0].define(version: 2024_01_01_000003) do
     t.index ["error_occurrence_id"], name: "index_faultline_error_contexts_on_error_occurrence_id"
   end
 
+  create_table "faultline_request_traces", force: :cascade do |t|
+    t.string "endpoint", null: false
+    t.string "http_method", null: false
+    t.string "path"
+    t.integer "status"
+    t.float "duration_ms"
+    t.float "db_runtime_ms"
+    t.float "view_runtime_ms"
+    t.integer "db_query_count", default: 0
+    t.datetime "created_at", null: false
+    t.index ["endpoint"], name: "index_faultline_request_traces_on_endpoint"
+    t.index ["created_at"], name: "index_faultline_request_traces_on_created_at"
+    t.index ["endpoint", "created_at"], name: "index_faultline_request_traces_on_endpoint_and_created_at"
+  end
+
   add_foreign_key "faultline_error_occurrences", "faultline_error_groups", column: "error_group_id"
   add_foreign_key "faultline_error_contexts", "faultline_error_occurrences", column: "error_occurrence_id"
 end

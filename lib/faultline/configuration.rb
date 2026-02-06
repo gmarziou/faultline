@@ -25,7 +25,11 @@ module Faultline
                   :retention_days,
                   :github_repo,
                   :github_token,
-                  :github_labels
+                  :github_labels,
+                  :enable_apm,
+                  :apm_sample_rate,
+                  :apm_ignore_paths,
+                  :apm_retention_days
 
     def initialize
       @user_class = "User"
@@ -60,6 +64,10 @@ module Faultline
       @github_repo = nil
       @github_token = nil
       @github_labels = ["bug", "faultline"]
+      @enable_apm = false
+      @apm_sample_rate = 1.0
+      @apm_ignore_paths = nil
+      @apm_retention_days = 30
     end
 
     def github_configured?
@@ -78,6 +86,10 @@ module Faultline
 
     def resolved_app_name
       @app_name || Rails.application.class.module_parent_name
+    end
+
+    def resolved_apm_ignore_paths
+      @apm_ignore_paths || @middleware_ignore_paths
     end
 
     def resolved_filter_parameters

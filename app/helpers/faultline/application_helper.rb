@@ -28,6 +28,31 @@ module Faultline
       end
     end
 
+    def http_status_class(status)
+      case status.to_i
+      when 200..299
+        "text-emerald-600 dark:text-emerald-400"
+      when 300..399
+        "text-blue-600 dark:text-blue-400"
+      when 400..499
+        "text-amber-600 dark:text-amber-400"
+      when 500..599
+        "text-rose-600 dark:text-rose-400"
+      else
+        "text-slate-500"
+      end
+    end
+
+    def format_duration(ms)
+      return "-" if ms.nil?
+
+      if ms >= 1000
+        "#{(ms / 1000.0).round(2)}s"
+      else
+        "#{ms.round(1)}ms"
+      end
+    end
+
     def highlight_ruby(code)
       return "" if code.blank?
 

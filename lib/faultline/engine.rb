@@ -26,6 +26,13 @@ module Faultline
       end
     end
 
+    initializer "faultline.apm", after: :load_config_initializers do
+      if Faultline.configuration&.enable_apm
+        require "faultline/apm/collector"
+        Faultline::Apm::Collector.start!
+      end
+    end
+
     config.after_initialize do
       if Faultline.configuration&.authenticate_with.nil? && Rails.env.production?
         Rails.logger.warn "[Faultline] No authentication configured. Dashboard is publicly accessible."

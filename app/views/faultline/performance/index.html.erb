@@ -1,0 +1,227 @@
+<% content_for :navbar_stats do %>
+  <div class="hidden sm:flex items-center gap-4 text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+    <div>Requests: <span class="text-slate-900 dark:text-white"><%= @stats[:total_requests] %></span></div>
+    <div class="h-4 w-px bg-slate-200 dark:bg-slate-700"></div>
+    <div>Avg: <span class="text-slate-900 dark:text-white"><%= format_duration(@stats[:avg_duration]) %></span></div>
+  </div>
+<% end %>
+
+<header class="flex items-center justify-between mb-8">
+  <h1 class="text-3xl font-bold tracking-tight">Performance</h1>
+  <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+    <% Faultline::RequestTrace::PERIODS.keys.each do |period| %>
+      <%= link_to period,
+          faultline.performance_index_path(period: period),
+          class: "px-3 py-1.5 text-xs font-medium rounded-md transition-all #{@period == period ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'hover:bg-white dark:hover:bg-slate-700'}" %>
+    <% end %>
+  </div>
+</header>
+
+<!-- Summary Stats -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 glow-border">
+    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Total Requests</div>
+    <div class="text-2xl font-bold text-slate-900 dark:text-white"><%= number_with_delimiter(@stats[:total_requests]) %></div>
+  </div>
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 glow-border">
+    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Avg Response Time</div>
+    <div class="text-2xl font-bold text-slate-900 dark:text-white"><%= format_duration(@stats[:avg_duration]) %></div>
+  </div>
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 glow-border">
+    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">P95 Response Time</div>
+    <div class="text-2xl font-bold text-slate-900 dark:text-white"><%= format_duration(@stats[:p95_duration]) %></div>
+  </div>
+  <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-5 glow-border">
+    <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Error Rate</div>
+    <% error_rate = @stats[:total_requests] > 0 ? ((@stats[:error_count].to_f / @stats[:total_requests]) * 100).round(1) : 0 %>
+    <div class="text-2xl font-bold <%= error_rate > 5 ? 'text-rose-500' : error_rate > 1 ? 'text-amber-500' : 'text-emerald-500' %>"><%= error_rate %>%</div>
+  </div>
+</div>
+
+<!-- Response Time Chart -->
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 glow-border mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</h3>
+    <div class="flex items-center gap-4 text-xs text-slate-400">
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Avg</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Max</span>
+    </div>
+  </div>
+  <div class="h-64">
+    <% if @response_time_data.any? %>
+      <canvas id="responseTimeChart"></canvas>
+    <% else %>
+      <div class="flex items-center justify-center h-full text-slate-400 text-sm">No data in this period</div>
+    <% end %>
+  </div>
+</section>
+
+<!-- Throughput Chart -->
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 glow-border mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Throughput</h3>
+    <div class="flex items-center gap-2 text-xs text-slate-400">
+      <span class="w-2 h-2 rounded-full bg-primary"></span>
+      <span>Requests</span>
+    </div>
+  </div>
+  <div class="h-48">
+    <% if @throughput_data.any? %>
+      <canvas id="throughputChart"></canvas>
+    <% else %>
+      <div class="flex items-center justify-center h-full text-slate-400 text-sm">No data in this period</div>
+    <% end %>
+  </div>
+</section>
+
+<!-- Slowest Endpoints Table -->
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
+  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Slowest Endpoints</h3>
+  </div>
+  <% if @slowest_endpoints.any? %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800">
+            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Endpoint</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Avg</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">P95</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Requests</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">DB Time</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Queries</th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Error Rate</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @slowest_endpoints.each do |ep| %>
+            <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+              <td class="px-6 py-4">
+                <%= link_to ep.endpoint,
+                    faultline.performance_path(ep.endpoint, period: @period),
+                    class: "font-medium text-slate-900 dark:text-white hover:text-primary transition-colors" %>
+              </td>
+              <td class="text-right px-6 py-4 font-mono">
+                <span class="<%= ep.avg_duration.to_f > 500 ? 'text-rose-500' : ep.avg_duration.to_f > 200 ? 'text-amber-500' : 'text-slate-600 dark:text-slate-300' %>">
+                  <%= format_duration(ep.avg_duration.to_f) %>
+                </span>
+              </td>
+              <td class="text-right px-6 py-4 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(ep.p95_duration.to_f) %></td>
+              <td class="text-right px-6 py-4 text-slate-600 dark:text-slate-300"><%= ep.request_count %></td>
+              <td class="text-right px-6 py-4 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(ep.avg_db_runtime.to_f) %></td>
+              <td class="text-right px-6 py-4 text-slate-600 dark:text-slate-300"><%= ep.avg_query_count.to_f.round(1) %></td>
+              <td class="text-right px-6 py-4">
+                <% rate = ep.request_count.to_i > 0 ? ((ep.error_count.to_f / ep.request_count.to_i) * 100).round(1) : 0 %>
+                <span class="<%= rate > 5 ? 'text-rose-500' : rate > 0 ? 'text-amber-500' : 'text-emerald-500' %>"><%= rate %>%</span>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+  <% else %>
+    <div class="p-12 text-center">
+      <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">speed</span>
+      <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No performance data yet</h3>
+      <p class="text-sm text-slate-500 dark:text-slate-400">Request traces will appear here once your app processes requests.</p>
+    </div>
+  <% end %>
+</section>
+
+<%
+  period_config = Faultline::RequestTrace::PERIODS[@period] || {}
+  granularity = period_config[:granularity] || :hour
+  time_format = case granularity
+                when :minute then "%H:%M"
+                when :hour then "%b %d %H:00"
+                else "%b %d"
+                end
+%>
+
+<% if @response_time_data.any? %>
+<script>
+  const rtCtx = document.getElementById('responseTimeChart').getContext('2d');
+  new Chart(rtCtx, {
+    type: 'line',
+    data: {
+      labels: <%= @response_time_data.map { |d| d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s }.to_json.html_safe %>,
+      datasets: [
+        {
+          label: 'Avg',
+          data: <%= @response_time_data.map { |d| d[:avg] }.to_json %>,
+          borderColor: '#22d3ee',
+          backgroundColor: 'rgba(34, 211, 238, 0.1)',
+          fill: true,
+          tension: 0.3,
+          borderWidth: 2,
+          pointRadius: 1
+        },
+        {
+          label: 'Max',
+          data: <%= @response_time_data.map { |d| d[:max] }.to_json %>,
+          borderColor: '#f59e0b',
+          backgroundColor: 'transparent',
+          borderDash: [4, 4],
+          tension: 0.3,
+          borderWidth: 1.5,
+          pointRadius: 0
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          callbacks: {
+            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + 'ms'; }
+          }
+        }
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          grid: { color: 'rgba(148, 163, 184, 0.1)' },
+          ticks: { callback: function(v) { return v + 'ms'; } }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+</script>
+<% end %>
+
+<% if @throughput_data.any? %>
+<script>
+  const tpCtx = document.getElementById('throughputChart').getContext('2d');
+  new Chart(tpCtx, {
+    type: 'bar',
+    data: {
+      labels: <%= @throughput_data.keys.map { |d| d.is_a?(String) ? Time.parse(d).strftime(time_format) : d.strftime(time_format) rescue d.to_s }.to_json.html_safe %>,
+      datasets: [{
+        label: 'Requests',
+        data: <%= @throughput_data.values.to_json %>,
+        backgroundColor: 'rgba(244, 63, 94, 0.6)',
+        borderColor: '#f43f5e',
+        borderWidth: 1,
+        borderRadius: 4
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: { stepSize: 1 },
+          grid: { color: 'rgba(148, 163, 184, 0.1)' }
+        },
+        x: { grid: { display: false } }
+      }
+    }
+  });
+</script>
+<% end %>
