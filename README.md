@@ -21,7 +21,7 @@ A self-hosted error tracking engine for Rails 8+ applications. Track errors, get
 - **Auto-Reopen** - Resolved errors automatically reopen when they recur
 - **GitHub Integration** - Create GitHub issues directly from errors with full context
 - **Rate Limiting** - Configurable cooldown prevents notification spam during error storms
-- **Pluggable Notifiers** - Telegram, Slack, Resend (email), webhooks, or build your own
+- **Pluggable Notifiers** - Telegram, Slack, Email (ActionMailer or Resend), webhooks, or build your own
 - **Standalone Dashboard** - Clean Tailwind UI with interactive charts and time-range zooming
 - **Configurable Authentication** - Integrate with Devise, Warden, or custom auth
 - **Request Context** - Capture URL, params, headers, user info, and custom data
@@ -107,6 +107,25 @@ config.add_notifier(
   )
 )
 ```
+
+#### Email (ActionMailer)
+
+Use your app's existing mail configuration (SMTP, SendGrid, Postmark, Mailgun, etc.) without any external API:
+
+```ruby
+config.add_notifier(
+  Faultline::Notifiers::Email.new(
+    to: ["team@example.com", "oncall@example.com"],
+    from: "errors@yourdomain.com"  # optional, defaults to ActionMailer default
+  )
+)
+```
+
+Emails are sent asynchronously via `deliver_later`, so Active Job must be configured. The email includes:
+- Exception class and message
+- Occurrence count and timestamps
+- File location and stack trace
+- User and request info (if available)
 
 #### Telegram
 
