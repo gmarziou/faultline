@@ -9,7 +9,7 @@ module Faultline
     end
 
     def to_speedscope_json
-      SpeedscopeConverter.convert(decoded_profile)
+      Faultline::Apm::SpeedscopeConverter.convert(decoded_profile)
     end
 
     def self.cleanup!(before: nil)
