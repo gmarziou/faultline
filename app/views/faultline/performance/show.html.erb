@@ -69,22 +69,58 @@
 
 <!-- Individual Traces -->
 <section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
-  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
-    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Slowest Requests</h3>
-    <span class="text-xs text-slate-400"><%= @total_count %> total</span>
+  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Requests</h3>
+      <span class="text-xs text-slate-400"><%= @total_count %> total</span>
+    </div>
+    <%= form_with url: faultline.performance_path(@endpoint), method: :get, local: true, class: "flex items-center gap-2" do %>
+      <%= hidden_field_tag :period, @period %>
+      <%= hidden_field_tag :sort, @sort %>
+      <%= hidden_field_tag :dir, @dir %>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+        <%= text_field_tag :q, @search,
+            placeholder: "Search paths...",
+            class: "pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors w-64" %>
+      </div>
+      <% if @search.present? %>
+        <%= link_to faultline.performance_path(@endpoint, period: @period, sort: @sort, dir: @dir),
+            class: "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" do %>
+          <span class="material-symbols-outlined text-lg">close</span>
+        <% end %>
+      <% end %>
+    <% end %>
   </div>
+  <%
+    def sort_link_show(column, label, align: :left)
+      current = @sort == column.to_s
+      new_dir = current && @dir == :desc ? "asc" : "desc"
+      icon = current ? (@dir == :desc ? "arrow_downward" : "arrow_upward") : ""
+
+      link_to faultline.performance_path(@endpoint, period: @period, q: @search, sort: column, dir: new_dir, page: 1),
+              class: "group inline-flex items-center gap-1 #{align == :right ? 'justify-end' : ''} #{align == :center ? 'justify-center' : ''}" do
+        concat content_tag(:span, label)
+        if current
+          concat content_tag(:span, icon, class: "material-symbols-outlined text-sm text-primary")
+        else
+          concat content_tag(:span, "unfold_more", class: "material-symbols-outlined text-sm text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity")
+        end
+      end
+    end
+  %>
   <% if @recent_traces.any? %>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-200 dark:border-slate-800">
-            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Time</th>
-            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Request</th>
-            <th class="text-center px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Status</th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Duration</th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">DB Time</th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">View Time</th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Queries</th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:created_at, "Time") %></th>
+            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:path, "Request") %></th>
+            <th class="text-center px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:status, "Status", align: :center) %></th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:duration_ms, "Duration", align: :right) %></th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:db_runtime_ms, "DB Time", align: :right) %></th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:view_runtime_ms, "View Time", align: :right) %></th>
+            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link_show(:db_query_count, "Queries", align: :right) %></th>
             <th class="text-center px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Details</th>
           </tr>
         </thead>
@@ -137,9 +173,15 @@
     <% end %>
   <% else %>
     <div class="p-12 text-center">
-      <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">speed</span>
-      <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No traces yet</h3>
-      <p class="text-sm text-slate-500 dark:text-slate-400">Request traces for this endpoint will appear here.</p>
+      <% if @search.present? %>
+        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">search_off</span>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No matching requests</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Try a different search term or <%= link_to "clear the filter", faultline.performance_path(@endpoint, period: @period), class: "text-primary hover:underline" %>.</p>
+      <% else %>
+        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">speed</span>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No traces yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Request traces for this endpoint will appear here.</p>
+      <% end %>
     </div>
   <% end %>
 </section>

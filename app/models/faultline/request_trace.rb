@@ -55,6 +55,54 @@ module Faultline
           .limit(limit)
       end
 
+      def endpoints_paginated(since: 24.hours.ago, search: nil, sort: "request_count", dir: :desc, page: 1, per_page: 25)
+        base = where("created_at >= ?", since)
+        base = base.where("endpoint LIKE ?", "%#{sanitize_sql_like(search)}%") if search.present?
+
+        # Get total count of unique endpoints
+        total_count = base.distinct.count(:endpoint)
+        total_pages = [(total_count.to_f / per_page).ceil, 1].max
+        page = [[page, 1].max, total_pages].min
+
+        # Build the order clause based on sort column
+        order_sql = case sort
+                    when "endpoint"
+                      "endpoint #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "avg_duration"
+                      "AVG(duration_ms) #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "p95_duration"
+                      "#{percentile_order_sql('duration_ms', 95)} #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "request_count"
+                      "COUNT(*) #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "avg_db_runtime"
+                      "AVG(db_runtime_ms) #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "avg_query_count"
+                      "AVG(db_query_count) #{dir == :asc ? 'ASC' : 'DESC'}"
+                    when "error_rate"
+                      "CAST(SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS FLOAT) / NULLIF(COUNT(*), 0) #{dir == :asc ? 'ASC' : 'DESC'}"
+                    else
+                      "COUNT(*) DESC"
+                    end
+
+        records = base
+          .group(:endpoint)
+          .select(
+            "endpoint",
+            "COUNT(*) AS request_count",
+            "AVG(duration_ms) AS avg_duration",
+            "AVG(db_runtime_ms) AS avg_db_runtime",
+            "AVG(db_query_count) AS avg_query_count",
+            percentile_select("duration_ms", 95, "p95_duration"),
+            percentile_select("duration_ms", 50, "p50_duration"),
+            "SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS error_count"
+          )
+          .order(Arel.sql(order_sql))
+          .offset((page - 1) * per_page)
+          .limit(per_page)
+
+        { records: records, total_count: total_count, total_pages: total_pages }
+      end
+
       def response_time_series(period: "24h", endpoint: nil)
         config = PERIODS[period] || PERIODS["24h"]
         base = where("created_at >= ?", config[:duration].ago)
@@ -151,6 +199,15 @@ module Faultline
           "PERCENTILE_CONT(#{percentile / 100.0}) WITHIN GROUP (ORDER BY #{column}) AS #{as_name}"
         else
           "MAX(#{column}) AS #{as_name}"
+        end
+      end
+
+      def percentile_order_sql(column, percentile)
+        adapter = connection.adapter_name.downcase
+        if adapter.include?("postgresql")
+          "PERCENTILE_CONT(#{percentile / 100.0}) WITHIN GROUP (ORDER BY #{column})"
+        else
+          "MAX(#{column})"
         end
       end
 

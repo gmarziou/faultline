@@ -9,13 +9,13 @@ module Faultline
           def request(req, body = nil, &block)
             return super unless SpanCollector.active?
 
-            start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+            start_time = Time.now.to_f
             response = nil
 
             begin
               response = super
             ensure
-              end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+              end_time = Time.now.to_f
               duration_ms = (end_time - start_time) * 1000
 
               uri = "#{use_ssl? ? 'https' : 'http'}://#{address}:#{port}#{req.path}"

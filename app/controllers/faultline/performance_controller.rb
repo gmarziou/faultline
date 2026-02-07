@@ -5,32 +5,55 @@ module Faultline
     PER_PAGE = 25
     CACHE_TTL = 1.minute
 
+    ENDPOINTS_SORT_COLUMNS = %w[endpoint avg_duration p95_duration request_count avg_db_runtime avg_query_count error_rate].freeze
+    REQUESTS_SORT_COLUMNS = %w[created_at path status duration_ms db_runtime_ms view_runtime_ms db_query_count].freeze
+
     def index
       @period = params[:period].presence || "24h"
       @since = period_to_time(@period)
+      @search = params[:q].to_s.strip
+      @sort = params[:sort].presence_in(ENDPOINTS_SORT_COLUMNS) || "request_count"
+      @dir = params[:dir] == "asc" ? :asc : :desc
+      @page = [(params[:page] || 1).to_i, 1].max
 
-      # Cache expensive aggregate queries for 1 minute
+      # Cache stats and chart data (not affected by search/sort/page)
       cache_key = "faultline:perf:index:#{@period}:#{cache_time_bucket}"
 
       cached = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
         {
           stats: RequestTrace.summary_stats(since: @since),
           response_time_data: RequestTrace.response_time_series(period: @period),
-          throughput_data: RequestTrace.throughput_series(period: @period),
-          slowest_endpoints: RequestTrace.slowest_endpoints(since: @since, limit: 20).to_a
+          throughput_data: RequestTrace.throughput_series(period: @period)
         }
       end
 
       @stats = cached[:stats]
       @response_time_data = cached[:response_time_data]
       @throughput_data = cached[:throughput_data]
-      @slowest_endpoints = cached[:slowest_endpoints]
+
+      # Endpoints with search, sort, pagination (not cached due to dynamic params)
+      endpoints_result = RequestTrace.endpoints_paginated(
+        since: @since,
+        search: @search,
+        sort: @sort,
+        dir: @dir,
+        page: @page,
+        per_page: PER_PAGE
+      )
+
+      @endpoints = endpoints_result[:records]
+      @total_count = endpoints_result[:total_count]
+      @total_pages = endpoints_result[:total_pages]
     end
 
     def show
       @endpoint = params[:id]
       @period = params[:period].presence || "24h"
       @since = period_to_time(@period)
+      @search = params[:q].to_s.strip
+      @sort = params[:sort].presence_in(REQUESTS_SORT_COLUMNS) || "db_query_count"
+      @dir = params[:dir] == "asc" ? :asc : :desc
+      @page = [(params[:page] || 1).to_i, 1].max
 
       scope = RequestTrace.for_endpoint(@endpoint).since(@since)
 
@@ -47,13 +70,20 @@ module Faultline
       @stats = cached[:stats]
       @response_time_data = cached[:response_time_data]
 
-      # Pagination not cached (changes with page param, relatively fast)
-      @page = (params[:page] || 1).to_i
-      @total_count = @stats[:total_requests]
+      # Apply search filter
+      filtered_scope = scope
+      if @search.present?
+        filtered_scope = filtered_scope.where("path LIKE ?", "%#{sanitize_like(@search)}%")
+      end
+
+      # Pagination with dynamic sort
+      @total_count = filtered_scope.count
       @total_pages = [(@total_count.to_f / PER_PAGE).ceil, 1].max
-      @recent_traces = scope.order(duration_ms: :desc)
-                            .offset((@page - 1) * PER_PAGE)
-                            .limit(PER_PAGE)
+      @page = [[@page, 1].max, @total_pages].min if @total_pages > 0
+
+      @recent_traces = filtered_scope.order(@sort => @dir)
+                                     .offset((@page - 1) * PER_PAGE)
+                                     .limit(PER_PAGE)
     end
 
     private
@@ -61,6 +91,10 @@ module Faultline
     def period_to_time(period)
       config = RequestTrace::PERIODS[period]
       config ? config[:duration].ago : 24.hours.ago
+    end
+
+    def sanitize_like(str)
+      str.gsub(/[%_\\]/) { |m| "\\#{m}" }
     end
 
     # Time bucket for cache keys - rounds to nearest minute
