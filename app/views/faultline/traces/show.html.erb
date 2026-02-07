@@ -108,8 +108,9 @@
                              when 'redis' then 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
                              else 'bg-slate-500/10 text-slate-600 dark:text-slate-400'
                              end
-          left_pct = (start_offset / total_duration * 100).clamp(0, 100)
-          width_pct = (duration / total_duration * 100).clamp(0.5, 100 - left_pct)
+          left_pct = (start_offset / total_duration * 100).clamp(0, 99.5)
+          max_width = [100 - left_pct, 0.5].max
+          width_pct = (duration / total_duration * 100).clamp(0.5, max_width)
         %>
 
         <div class="px-6 py-2 flex items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
