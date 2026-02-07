@@ -28,6 +28,13 @@ module Faultline
 
     initializer "faultline.apm", after: :load_config_initializers do
       if Faultline.configuration&.enable_apm
+        require "faultline/apm/span_collector"
+        require "faultline/apm/profile_collector"
+        require "faultline/apm/speedscope_converter"
+        require "faultline/apm/instrumenters/sql_instrumenter"
+        require "faultline/apm/instrumenters/view_instrumenter"
+        require "faultline/apm/instrumenters/http_instrumenter"
+        require "faultline/apm/instrumenters/redis_instrumenter"
         require "faultline/apm/collector"
         Faultline::Apm::Collector.start!
       end

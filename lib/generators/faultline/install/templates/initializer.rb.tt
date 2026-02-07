@@ -244,4 +244,24 @@ Faultline.configure do |config|
   # How long to keep APM traces in days (default: 30)
   # Use `rake faultline:apm:cleanup` to remove old traces.
   # config.apm_retention_days = 30
+
+  # --- Span Collection (Waterfall Visualization) ---
+  # Capture detailed spans for SQL, HTTP, Redis, and view rendering.
+  # When enabled, traces include a waterfall timeline showing each operation.
+  # config.apm_capture_spans = true  # default: true when APM enabled
+
+  # --- CPU Profiling (Flame Graphs) ---
+  # Enable sampling-based profiling using stackprof for flame graph visualization.
+  # Requires: gem 'stackprof' in your Gemfile
+  # config.apm_enable_profiling = false  # disabled by default
+
+  # Profile only a sample of requests to minimize overhead (0.0 to 1.0)
+  # config.apm_profile_sample_rate = 0.1  # 10% of requests
+
+  # Profiler sampling interval in microseconds (default: 1000 = 1ms)
+  # Lower values = more detailed profiles but higher overhead
+  # config.apm_profile_interval = 1000
+
+  # Profile mode: :cpu (CPU time), :wall (wall clock), or :object (allocations)
+  # config.apm_profile_mode = :cpu
 end

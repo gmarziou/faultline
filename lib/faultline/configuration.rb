@@ -29,7 +29,12 @@ module Faultline
                   :enable_apm,
                   :apm_sample_rate,
                   :apm_ignore_paths,
-                  :apm_retention_days
+                  :apm_retention_days,
+                  :apm_capture_spans,
+                  :apm_enable_profiling,
+                  :apm_profile_sample_rate,
+                  :apm_profile_interval,
+                  :apm_profile_mode
 
     def initialize
       @user_class = "User"
@@ -68,6 +73,11 @@ module Faultline
       @apm_sample_rate = 1.0
       @apm_ignore_paths = nil
       @apm_retention_days = 30
+      @apm_capture_spans = true
+      @apm_enable_profiling = false
+      @apm_profile_sample_rate = 0.1
+      @apm_profile_interval = 1000
+      @apm_profile_mode = :cpu
     end
 
     def github_configured?

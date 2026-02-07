@@ -38,6 +38,26 @@ RSpec.describe Faultline::Configuration do
     it "sets retention_days to 90" do
       expect(config.retention_days).to eq(90)
     end
+
+    it "sets apm_capture_spans to true" do
+      expect(config.apm_capture_spans).to be true
+    end
+
+    it "sets apm_enable_profiling to false" do
+      expect(config.apm_enable_profiling).to be false
+    end
+
+    it "sets apm_profile_sample_rate to 0.1" do
+      expect(config.apm_profile_sample_rate).to eq(0.1)
+    end
+
+    it "sets apm_profile_interval to 1000" do
+      expect(config.apm_profile_interval).to eq(1000)
+    end
+
+    it "sets apm_profile_mode to :cpu" do
+      expect(config.apm_profile_mode).to eq(:cpu)
+    end
   end
 
   describe "#add_notifier" do

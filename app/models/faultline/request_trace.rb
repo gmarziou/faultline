@@ -2,9 +2,32 @@
 
 module Faultline
   class RequestTrace < ApplicationRecord
+    has_one :profile, class_name: "Faultline::RequestProfile", dependent: :destroy
+
     scope :recent, -> { order(created_at: :desc) }
     scope :since, ->(time) { where("created_at >= ?", time) }
     scope :for_endpoint, ->(endpoint) { where(endpoint: endpoint) }
+
+    def parsed_spans
+      return [] unless self.class.column_names.include?("spans")
+      return [] if spans.blank?
+
+      spans.is_a?(String) ? JSON.parse(spans) : spans
+    rescue JSON::ParserError
+      []
+    end
+
+    def has_spans?
+      return false unless self.class.column_names.include?("spans")
+
+      spans.present? && parsed_spans.any?
+    end
+
+    def has_profile?
+      return false unless self.class.column_names.include?("has_profile")
+
+      self[:has_profile] == true
+    end
 
     PERIODS = {
       "1h"  => { duration: 1.hour,   granularity: :minute },

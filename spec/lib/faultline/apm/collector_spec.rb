@@ -52,7 +52,8 @@ RSpec.describe Faultline::Apm::Collector do
     it "unsubscribes from notifications" do
       described_class.start!
 
-      expect(ActiveSupport::Notifications).to receive(:unsubscribe).twice.and_call_original
+      # 3 subscribers: start_processing, sql, and process_action
+      expect(ActiveSupport::Notifications).to receive(:unsubscribe).exactly(3).times.and_call_original
       described_class.stop!
     end
   end

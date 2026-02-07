@@ -1,0 +1,234 @@
+<div class="mb-6">
+  <%= link_to faultline.performance_path(@trace.endpoint), class: "inline-flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors" do %>
+    <span class="material-symbols-outlined text-lg">arrow_back</span>
+    <span>Back to <%= @trace.endpoint %></span>
+  <% end %>
+</div>
+
+<!-- Request Summary Card -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-6 glow-border">
+  <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800">
+    <div class="flex items-center gap-3">
+      <span class="inline-block px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider
+        <%= case @trace.http_method
+            when 'GET' then 'bg-emerald-500/10 text-emerald-500'
+            when 'POST' then 'bg-blue-500/10 text-blue-500'
+            when 'PUT', 'PATCH' then 'bg-amber-500/10 text-amber-500'
+            when 'DELETE' then 'bg-rose-500/10 text-rose-500'
+            else 'bg-slate-500/10 text-slate-500'
+            end %>"><%= @trace.http_method %></span>
+      <h1 class="text-xl font-bold text-slate-900 dark:text-white font-mono"><%= @trace.path %></h1>
+      <span class="font-mono text-sm <%= http_status_class(@trace.status) %>"><%= @trace.status %></span>
+    </div>
+    <div class="mt-2 text-sm text-slate-500">
+      <%= @trace.created_at.strftime("%B %d, %Y at %H:%M:%S.%L") %>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 divide-x divide-slate-200 dark:divide-slate-800">
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Duration</div>
+      <div class="text-lg font-bold <%= @trace.duration_ms.to_f > 500 ? 'text-rose-500' : @trace.duration_ms.to_f > 200 ? 'text-amber-500' : 'text-slate-900 dark:text-white' %>">
+        <%= format_duration(@trace.duration_ms) %>
+      </div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">DB Time</div>
+      <div class="text-lg font-bold text-cyan-500"><%= format_duration(@trace.db_runtime_ms) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">View Time</div>
+      <div class="text-lg font-bold text-amber-500"><%= format_duration(@trace.view_runtime_ms) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Queries</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= @trace.db_query_count %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Spans</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= @spans.size %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Profile</div>
+      <div class="text-lg font-bold <%= @has_profile ? 'text-purple-500' : 'text-slate-400' %>">
+        <%= @has_profile ? 'Yes' : 'No' %>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Waterfall Visualization -->
+<% if @spans.any? %>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border mb-6">
+  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Waterfall Timeline</h3>
+    <div class="flex items-center gap-4 text-xs">
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-cyan-500"></span> SQL</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-amber-500"></span> View</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-purple-500"></span> HTTP</span>
+      <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded bg-rose-500"></span> Redis</span>
+    </div>
+  </div>
+
+  <div class="overflow-x-auto">
+    <% total_duration = @trace.duration_ms.to_f %>
+    <% total_duration = 1 if total_duration <= 0 %>
+
+    <!-- Timeline Header -->
+    <div class="px-6 py-2 border-b border-slate-100 dark:border-slate-800/50 flex items-center text-[10px] text-slate-400 font-mono">
+      <div class="w-64 flex-shrink-0"></div>
+      <div class="flex-1 relative h-4">
+        <% [0, 25, 50, 75, 100].each do |pct| %>
+          <span class="absolute" style="left: <%= pct %>%"><%= (total_duration * pct / 100).round(1) %>ms</span>
+        <% end %>
+      </div>
+    </div>
+
+    <!-- Span Rows -->
+    <div class="divide-y divide-slate-100 dark:divide-slate-800/50">
+      <% @spans.each do |span| %>
+        <% span = span.with_indifferent_access if span.is_a?(Hash) %>
+        <% span_type = span[:type] || span['type'] || 'unknown' %>
+        <% description = span[:description] || span['description'] || '' %>
+        <% start_offset = (span[:start_offset_ms] || span['start_offset_ms'] || 0).to_f %>
+        <% duration = (span[:duration_ms] || span['duration_ms'] || 0).to_f %>
+        <% metadata = span[:metadata] || span['metadata'] || {} %>
+
+        <%
+          type_color = case span_type.to_s
+                       when 'sql' then 'bg-cyan-500'
+                       when 'view' then 'bg-amber-500'
+                       when 'http' then 'bg-purple-500'
+                       when 'redis' then 'bg-rose-500'
+                       else 'bg-slate-500'
+                       end
+          type_badge_color = case span_type.to_s
+                             when 'sql' then 'bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+                             when 'view' then 'bg-amber-500/10 text-amber-600 dark:text-amber-400'
+                             when 'http' then 'bg-purple-500/10 text-purple-600 dark:text-purple-400'
+                             when 'redis' then 'bg-rose-500/10 text-rose-600 dark:text-rose-400'
+                             else 'bg-slate-500/10 text-slate-600 dark:text-slate-400'
+                             end
+          left_pct = (start_offset / total_duration * 100).clamp(0, 100)
+          width_pct = (duration / total_duration * 100).clamp(0.5, 100 - left_pct)
+        %>
+
+        <div class="px-6 py-2 flex items-center hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors group">
+          <!-- Type Badge & Description -->
+          <div class="w-64 flex-shrink-0 flex items-center gap-2 overflow-hidden">
+            <span class="inline-block px-1.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider flex-shrink-0 <%= type_badge_color %>">
+              <%= span_type %>
+            </span>
+            <span class="text-xs text-slate-600 dark:text-slate-300 font-mono truncate" title="<%= description %>">
+              <%= description.truncate(40) %>
+            </span>
+          </div>
+
+          <!-- Timeline Bar -->
+          <div class="flex-1 relative h-6 flex items-center">
+            <div class="absolute h-3 rounded <%= type_color %> opacity-80 hover:opacity-100 transition-opacity cursor-pointer"
+                 style="left: <%= left_pct %>%; width: <%= width_pct %>%;"
+                 title="<%= description %>&#10;Start: <%= start_offset.round(2) %>ms&#10;Duration: <%= duration.round(2) %>ms">
+            </div>
+          </div>
+
+          <!-- Duration -->
+          <div class="w-20 flex-shrink-0 text-right">
+            <span class="text-xs font-mono text-slate-500"><%= duration.round(2) %>ms</span>
+          </div>
+        </div>
+      <% end %>
+    </div>
+  </div>
+</section>
+<% else %>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border mb-6">
+  <div class="p-12 text-center">
+    <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">layers</span>
+    <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No spans captured</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+      Spans are captured when <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">apm_capture_spans</code> is enabled.
+    </p>
+  </div>
+</section>
+<% end %>
+
+<!-- Flame Graph -->
+<% if @has_profile %>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
+  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
+      <span class="material-symbols-outlined text-base align-middle mr-1">local_fire_department</span>
+      CPU Flame Graph
+    </h3>
+    <div class="flex items-center gap-2 text-xs text-slate-500">
+      <span><%= @trace.profile.samples %> samples</span>
+      <span>&bull;</span>
+      <span><%= @trace.profile.mode %> mode</span>
+    </div>
+  </div>
+  <div class="relative" style="height: 500px;">
+    <iframe
+      id="speedscope-iframe"
+      src="about:blank"
+      class="w-full h-full border-0"
+      sandbox="allow-scripts allow-same-origin"
+    ></iframe>
+  </div>
+</section>
+
+<script>
+  (function() {
+    const iframe = document.getElementById('speedscope-iframe');
+    const profileUrl = '<%= faultline.profile_trace_path(@trace) %>';
+
+    fetch(profileUrl)
+      .then(response => response.json())
+      .then(profileData => {
+        // Encode profile data as base64 for speedscope URL
+        const encodedProfile = btoa(JSON.stringify(profileData));
+
+        // Create speedscope HTML with embedded data
+        const speedscopeHtml = `
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <style>
+              body { margin: 0; overflow: hidden; }
+              #speedscope { width: 100vw; height: 100vh; }
+            </style>
+          </head>
+          <body>
+            <div id="speedscope"></div>
+            <script>
+              window.speedscopeConfig = {
+                profileData: ${JSON.stringify(profileData)}
+              };
+            <\/script>
+            <script src="https://cdn.jsdelivr.net/npm/speedscope@1.15.1/dist/release/speedscope.js"><\/script>
+          </body>
+          </html>
+        `;
+
+        // Load via blob URL for better isolation
+        const blob = new Blob([speedscopeHtml], { type: 'text/html' });
+        iframe.src = URL.createObjectURL(blob);
+      })
+      .catch(error => {
+        console.error('Failed to load profile:', error);
+        iframe.srcdoc = '<div style="padding: 20px; color: #666;">Failed to load flame graph</div>';
+      });
+  })();
+</script>
+<% else %>
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
+  <div class="p-12 text-center">
+    <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">local_fire_department</span>
+    <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No profile captured</h3>
+    <p class="text-sm text-slate-500 dark:text-slate-400">
+      Enable profiling with <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">apm_enable_profiling = true</code>
+      and ensure <code class="text-xs bg-slate-100 dark:bg-slate-800 px-1.5 py-0.5 rounded">stackprof</code> gem is installed.
+    </p>
+  </div>
+</section>
+<% end %>

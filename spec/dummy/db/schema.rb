@@ -1,6 +1,6 @@
 # frozen_string_literal: true
 
-ActiveRecord::Schema[8.0].define(version: 2024_01_01_000003) do
+ActiveRecord::Schema[8.0].define(version: 2024_01_01_000005) do
   create_table "faultline_error_groups", force: :cascade do |t|
     t.string "fingerprint", null: false
     t.string "exception_class", null: false
@@ -64,12 +64,25 @@ ActiveRecord::Schema[8.0].define(version: 2024_01_01_000003) do
     t.float "db_runtime_ms"
     t.float "view_runtime_ms"
     t.integer "db_query_count", default: 0
+    t.json "spans"
+    t.boolean "has_profile", default: false
     t.datetime "created_at", null: false
     t.index ["endpoint"], name: "index_faultline_request_traces_on_endpoint"
     t.index ["created_at"], name: "index_faultline_request_traces_on_created_at"
     t.index ["endpoint", "created_at"], name: "index_faultline_request_traces_on_endpoint_and_created_at"
   end
 
+  create_table "faultline_request_profiles", force: :cascade do |t|
+    t.integer "request_trace_id", null: false
+    t.text "profile_data", null: false
+    t.string "mode", default: "cpu"
+    t.integer "samples", default: 0
+    t.float "interval_ms"
+    t.datetime "created_at", null: false
+    t.index ["request_trace_id"], name: "index_faultline_request_profiles_on_request_trace_id"
+  end
+
   add_foreign_key "faultline_error_occurrences", "faultline_error_groups", column: "error_group_id"
   add_foreign_key "faultline_error_contexts", "faultline_error_occurrences", column: "error_occurrence_id"
+  add_foreign_key "faultline_request_profiles", "faultline_request_traces", column: "request_trace_id", on_delete: :cascade
 end

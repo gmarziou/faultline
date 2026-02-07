@@ -28,6 +28,10 @@ module Faultline
                            "db/migrate/create_faultline_error_contexts.rb"
         migration_template "migrations/create_faultline_request_traces.rb.tt",
                            "db/migrate/create_faultline_request_traces.rb"
+        migration_template "migrations/add_spans_to_faultline_request_traces.rb.tt",
+                           "db/migrate/add_spans_to_faultline_request_traces.rb"
+        migration_template "migrations/create_faultline_request_profiles.rb.tt",
+                           "db/migrate/create_faultline_request_profiles.rb"
       end
 
       def add_route

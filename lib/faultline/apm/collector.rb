@@ -7,18 +7,70 @@ module Faultline
 
       class << self
         def start!
+          subscribe_to_start_processing
           subscribe_to_sql_notifications
           subscribe_to_action_notifications
+          start_instrumenters
         end
 
         def stop!
+          ActiveSupport::Notifications.unsubscribe(@start_subscriber) if @start_subscriber
           ActiveSupport::Notifications.unsubscribe(@sql_subscriber) if @sql_subscriber
           ActiveSupport::Notifications.unsubscribe(@action_subscriber) if @action_subscriber
+          @start_subscriber = nil
           @sql_subscriber = nil
           @action_subscriber = nil
+          stop_instrumenters
         end
 
         private
+
+        def start_instrumenters
+          config = Faultline.configuration
+          return unless config.apm_capture_spans
+          return unless instrumenters_available?
+
+          Instrumenters::SqlInstrumenter.start!
+          Instrumenters::ViewInstrumenter.start!
+          Instrumenters::HttpInstrumenter.start!
+          Instrumenters::RedisInstrumenter.start!
+        end
+
+        def stop_instrumenters
+          return unless instrumenters_available?
+
+          Instrumenters::SqlInstrumenter.stop!
+          Instrumenters::ViewInstrumenter.stop!
+          Instrumenters::HttpInstrumenter.stop!
+          Instrumenters::RedisInstrumenter.stop!
+        end
+
+        def instrumenters_available?
+          defined?(Instrumenters::SqlInstrumenter)
+        end
+
+        def subscribe_to_start_processing
+          @start_subscriber = ActiveSupport::Notifications.subscribe("start_processing.action_controller") do |*args|
+            event = ActiveSupport::Notifications::Event.new(*args)
+            init_request_tracking(event)
+          end
+        end
+
+        def init_request_tracking(event)
+          config = Faultline.configuration
+          return unless config&.enable_apm
+
+          path = event.payload[:path]&.split("?")&.first
+          return if should_ignore?(path, config)
+
+          # Initialize span collection if enabled
+          if config.apm_capture_spans && defined?(SpanCollector)
+            SpanCollector.start_request
+          end
+
+          # Start profiling if enabled and sampled
+          ProfileCollector.start_profiling if defined?(ProfileCollector)
+        end
 
         def subscribe_to_sql_notifications
           @sql_subscriber = ActiveSupport::Notifications.subscribe("sql.active_record") do |*args|
@@ -57,6 +109,14 @@ module Faultline
           status = payload[:status]
           status = 500 if status.nil? && payload[:exception].present?
 
+          # Collect spans if enabled
+          spans = if defined?(SpanCollector) && SpanCollector.active?
+                    SpanCollector.collect_spans
+                  end
+
+          # Stop profiling and get results
+          profile_results = defined?(ProfileCollector) ? ProfileCollector.stop_profiling : nil
+
           store_trace(
             endpoint: endpoint,
             http_method: payload[:method] || "GET",
@@ -65,12 +125,16 @@ module Faultline
             duration_ms: event.duration&.round(2),
             db_runtime_ms: payload[:db_runtime]&.round(2),
             view_runtime_ms: payload[:view_runtime]&.round(2),
-            db_query_count: query_count
+            db_query_count: query_count,
+            spans: spans,
+            profile_results: profile_results
           )
         rescue StandardError => e
           Rails.logger.debug { "[Faultline APM] Failed to record trace: #{e.message}" }
         ensure
           Thread.current[THREAD_KEY] = 0
+          SpanCollector.clear if defined?(SpanCollector)
+          ProfileCollector.clear if defined?(ProfileCollector)
         end
 
         def should_ignore?(path, config)
@@ -83,9 +147,58 @@ module Faultline
         def store_trace(attrs)
           return unless RequestTrace.table_exists_for_apm?
 
-          RequestTrace.create!(attrs)
+          spans = attrs.delete(:spans)
+          profile_results = attrs.delete(:profile_results)
+
+          # Add spans to trace attributes if present
+          attrs[:spans] = spans if spans&.any? && column_exists?(:spans)
+
+          # Set has_profile flag if we have profile data
+          attrs[:has_profile] = profile_results.present? if column_exists?(:has_profile)
+
+          trace = RequestTrace.create!(attrs)
+
+          # Store profile separately if present
+          if profile_results && profile_table_exists?
+            store_profile(trace, profile_results)
+          end
+
+          trace
         rescue StandardError => e
           Rails.logger.debug { "[Faultline APM] Failed to store trace: #{e.message}" }
+        end
+
+        def store_profile(trace, profile_results)
+          return unless defined?(ProfileCollector) && defined?(RequestProfile)
+
+          config = Faultline.configuration
+
+          RequestProfile.create!(
+            request_trace: trace,
+            profile_data: ProfileCollector.encode_profile(profile_results),
+            mode: config.apm_profile_mode.to_s,
+            samples: profile_results[:samples] || 0,
+            interval_ms: (profile_results[:interval] || 1000) / 1000.0
+          )
+        rescue StandardError => e
+          Rails.logger.debug { "[Faultline APM] Failed to store profile: #{e.message}" }
+        end
+
+        def column_exists?(column_name)
+          @column_cache ||= {}
+          return @column_cache[column_name] if @column_cache.key?(column_name)
+
+          @column_cache[column_name] = RequestTrace.column_names.include?(column_name.to_s)
+        rescue StandardError
+          false
+        end
+
+        def profile_table_exists?
+          return @profile_table_exists if defined?(@profile_table_exists)
+
+          @profile_table_exists = RequestProfile.table_exists?
+        rescue StandardError
+          false
         end
       end
     end

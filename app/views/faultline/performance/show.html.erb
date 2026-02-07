@@ -85,11 +85,13 @@
             <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">DB Time</th>
             <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">View Time</th>
             <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Queries</th>
+            <th class="text-center px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Details</th>
           </tr>
         </thead>
         <tbody>
           <% @recent_traces.each do |trace| %>
-            <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors">
+            <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                onclick="window.location='<%= faultline.trace_path(trace) %>'">
               <td class="px-6 py-3 text-slate-500 whitespace-nowrap"><%= trace.created_at.strftime("%b %d %H:%M:%S") %></td>
               <td class="px-6 py-3">
                 <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mr-2
@@ -111,6 +113,17 @@
               <td class="text-right px-6 py-3 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(trace.db_runtime_ms) %></td>
               <td class="text-right px-6 py-3 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(trace.view_runtime_ms) %></td>
               <td class="text-right px-6 py-3 text-slate-600 dark:text-slate-300"><%= trace.db_query_count %></td>
+              <td class="text-center px-6 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <% if trace.has_spans? %>
+                    <span class="material-symbols-outlined text-sm text-cyan-500" title="Has spans">layers</span>
+                  <% end %>
+                  <% if trace.has_profile? %>
+                    <span class="material-symbols-outlined text-sm text-purple-500" title="Has flame graph">local_fire_department</span>
+                  <% end %>
+                  <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+                </div>
+              </td>
             </tr>
           <% end %>
         </tbody>

@@ -2,10 +2,15 @@
 
 namespace :faultline do
   namespace :apm do
-    desc "Clean up old APM request traces based on apm_retention_days"
+    desc "Clean up old APM request traces and profiles based on apm_retention_days"
     task cleanup: :environment do
-      deleted = Faultline::RequestTrace.cleanup!
-      puts "[Faultline APM] Cleaned up #{deleted} old traces"
+      traces_deleted = Faultline::RequestTrace.cleanup!
+      puts "[Faultline APM] Cleaned up #{traces_deleted} old traces"
+
+      if Faultline::RequestProfile.table_exists?
+        profiles_deleted = Faultline::RequestProfile.cleanup!
+        puts "[Faultline APM] Cleaned up #{profiles_deleted} old profiles"
+      end
     end
   end
 end
