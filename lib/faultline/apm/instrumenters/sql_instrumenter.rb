@@ -34,6 +34,14 @@ module Faultline
             # Truncate long SQL for display
             description = sql.length > 200 ? "#{sql[0, 200]}..." : sql
 
+            # type_casted_binds can be a Proc in Rails 7+ (lazy evaluation)
+            binds = payload[:type_casted_binds]
+            binds_count = case binds
+                          when Array then binds.size
+                          when nil then 0
+                          else 0
+                          end
+
             SpanCollector.record_span(
               type: :sql,
               description: description,
@@ -41,7 +49,7 @@ module Faultline
               duration_ms: event.duration,
               metadata: {
                 name: payload[:name],
-                binds: payload[:type_casted_binds]&.size || 0,
+                binds: binds_count,
                 cached: payload[:cached] || false
               }
             )
