@@ -9,7 +9,7 @@ module Faultline
       class << self
         def start_request
           Thread.current[THREAD_KEY_SPANS] = []
-          Thread.current[THREAD_KEY_START_TIME] = Process.clock_gettime(Process::CLOCK_MONOTONIC)
+          Thread.current[THREAD_KEY_START_TIME] = Time.now.to_f
         end
 
         def request_start_time
