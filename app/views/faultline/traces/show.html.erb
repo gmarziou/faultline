@@ -161,64 +161,116 @@
       <span class="material-symbols-outlined text-base align-middle mr-1">local_fire_department</span>
       CPU Flame Graph
     </h3>
-    <div class="flex items-center gap-2 text-xs text-slate-500">
-      <span><%= @trace.profile.samples %> samples</span>
-      <span>&bull;</span>
-      <span><%= @trace.profile.mode %> mode</span>
+    <div class="flex items-center gap-4">
+      <div class="flex items-center gap-2 text-xs text-slate-500">
+        <span><%= @trace.profile.samples %> samples</span>
+        <span>&bull;</span>
+        <span><%= @trace.profile.mode %> mode</span>
+      </div>
+      <button id="open-speedscope" class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors">
+        <span class="material-symbols-outlined text-sm">open_in_new</span>
+        Open in Speedscope
+      </button>
     </div>
   </div>
-  <div class="relative" style="height: 500px;">
-    <iframe
-      id="speedscope-iframe"
-      src="about:blank"
-      class="w-full h-full border-0"
-      sandbox="allow-scripts allow-same-origin"
-    ></iframe>
+  <div class="p-6">
+    <div id="profile-summary" class="space-y-3">
+      <div class="text-sm text-slate-500">Loading profile data...</div>
+    </div>
   </div>
 </section>
 
 <script>
   (function() {
-    const iframe = document.getElementById('speedscope-iframe');
     const profileUrl = '<%= faultline.profile_trace_path(@trace) %>';
+    const summaryDiv = document.getElementById('profile-summary');
+    const openBtn = document.getElementById('open-speedscope');
+    let profileData = null;
 
     fetch(profileUrl)
       .then(response => response.json())
-      .then(profileData => {
-        // Encode profile data as base64 for speedscope URL
-        const encodedProfile = btoa(JSON.stringify(profileData));
+      .then(data => {
+        profileData = data;
+        const frames = data.shared?.frames || [];
+        const profile = data.profiles?.[0];
 
-        // Create speedscope HTML with embedded data
-        const speedscopeHtml = `
-          <!DOCTYPE html>
-          <html>
-          <head>
-            <meta charset="utf-8">
-            <style>
-              body { margin: 0; overflow: hidden; }
-              #speedscope { width: 100vw; height: 100vh; }
-            </style>
-          </head>
-          <body>
-            <div id="speedscope"></div>
-            <script>
-              window.speedscopeConfig = {
-                profileData: ${JSON.stringify(profileData)}
-              };
-            <\/script>
-            <script src="https://cdn.jsdelivr.net/npm/speedscope@1.15.1/dist/release/speedscope.js"><\/script>
-          </body>
-          </html>
-        `;
+        // Group frames by file
+        const fileGroups = {};
+        frames.forEach(frame => {
+          const file = frame.file || '<unknown>';
+          if (!fileGroups[file]) fileGroups[file] = [];
+          fileGroups[file].push(frame);
+        });
 
-        // Load via blob URL for better isolation
-        const blob = new Blob([speedscopeHtml], { type: 'text/html' });
-        iframe.src = URL.createObjectURL(blob);
+        // Show top frames summary
+        let html = '<div class="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">' +
+                   frames.length + ' unique frames captured</div>';
+
+        html += '<div class="space-y-2 max-h-80 overflow-y-auto">';
+
+        // Show first 20 frames
+        frames.slice(0, 20).forEach((frame, i) => {
+          const isInternal = frame.file?.includes('<') || frame.file?.includes('/gems/');
+          const bgClass = isInternal ? 'bg-slate-50 dark:bg-slate-800/30' : 'bg-purple-50 dark:bg-purple-900/20';
+          const textClass = isInternal ? 'text-slate-500' : 'text-purple-700 dark:text-purple-300';
+
+          html += '<div class="' + bgClass + ' rounded px-3 py-2">' +
+                  '<div class="font-mono text-xs ' + textClass + ' truncate">' + escapeHtml(frame.name) + '</div>' +
+                  '<div class="font-mono text-[10px] text-slate-400 truncate">' +
+                  escapeHtml(frame.file || '') + (frame.line ? ':' + frame.line : '') + '</div>' +
+                  '</div>';
+        });
+
+        if (frames.length > 20) {
+          html += '<div class="text-xs text-slate-400 text-center py-2">... and ' + (frames.length - 20) + ' more frames</div>';
+        }
+
+        html += '</div>';
+        html += '<div class="mt-4 text-xs text-slate-500">Click "Open in Speedscope" to view the interactive flame graph</div>';
+
+        summaryDiv.innerHTML = html;
       })
       .catch(error => {
         console.error('Failed to load profile:', error);
-        iframe.srcdoc = '<div style="padding: 20px; color: #666;">Failed to load flame graph</div>';
+        summaryDiv.innerHTML = '<div class="text-sm text-rose-500">Failed to load profile data</div>';
       });
+
+    openBtn.addEventListener('click', function() {
+      if (!profileData) {
+        alert('Profile data not loaded yet');
+        return;
+      }
+
+      // Create a blob URL and open speedscope with it
+      const blob = new Blob([JSON.stringify(profileData)], { type: 'application/json' });
+      const blobUrl = URL.createObjectURL(blob);
+
+      // Speedscope can load from URL via hash
+      // We'll create a data URL approach instead
+      const jsonStr = JSON.stringify(profileData);
+      const base64 = btoa(unescape(encodeURIComponent(jsonStr)));
+
+      // Open speedscope with the profile
+      // Unfortunately speedscope.app doesn't accept external URLs directly for security
+      // So we'll open it and user can drag/drop, or we use the file download approach
+
+      // Create downloadable file and open speedscope
+      const a = document.createElement('a');
+      a.href = 'data:application/json;charset=utf-8,' + encodeURIComponent(jsonStr);
+      a.download = 'profile-<%= @trace.id %>.speedscope.json';
+      a.click();
+
+      // Open speedscope in new tab
+      setTimeout(() => {
+        window.open('https://www.speedscope.app/', '_blank');
+      }, 500);
+    });
+
+    function escapeHtml(text) {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
   })();
 </script>
 <% else %>
