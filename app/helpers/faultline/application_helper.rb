@@ -53,6 +53,24 @@ module Faultline
       end
     end
 
+    def sortable_header(column, label, path_helper:, path_params:, current_sort:, current_dir:, align: :left)
+      is_current = current_sort == column.to_s
+      new_dir = is_current && current_dir == :desc ? "asc" : "desc"
+      icon = is_current ? (current_dir == :desc ? "arrow_downward" : "arrow_upward") : "unfold_more"
+      icon_class = is_current ? "text-primary" : "text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100"
+
+      align_class = { left: "text-left", center: "text-center", right: "text-right" }[align]
+      justify_class = { left: "", center: "justify-center", right: "justify-end" }[align]
+
+      content_tag(:th, class: "#{align_class} px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider") do
+        link_to send(path_helper, path_params.merge(sort: column, dir: new_dir, page: 1)),
+                class: "group inline-flex items-center gap-1 w-full #{justify_class}" do
+          concat content_tag(:span, label)
+          concat content_tag(:span, icon, class: "material-symbols-outlined text-sm #{icon_class} transition-opacity")
+        end
+      end
+    end
+
     def highlight_ruby(code)
       return "" if code.blank?
 

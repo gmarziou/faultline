@@ -99,35 +99,19 @@
       <% end %>
     <% end %>
   </div>
-  <%
-    def sort_link(column, label, align: :left)
-      current = @sort == column.to_s
-      new_dir = current && @dir == :desc ? "asc" : "desc"
-      icon = current ? (@dir == :desc ? "arrow_downward" : "arrow_upward") : ""
-
-      link_to faultline.performance_index_path(period: @period, q: @search, sort: column, dir: new_dir, page: 1),
-              class: "group inline-flex items-center gap-1 #{align == :right ? 'justify-end' : ''}" do
-        concat content_tag(:span, label)
-        if current
-          concat content_tag(:span, icon, class: "material-symbols-outlined text-sm text-primary")
-        else
-          concat content_tag(:span, "unfold_more", class: "material-symbols-outlined text-sm text-slate-300 dark:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity")
-        end
-      end
-    end
-  %>
   <% if @endpoints.any? %>
+    <% sort_params = { period: @period, q: @search } %>
     <div class="overflow-x-auto">
       <table class="w-full text-sm">
         <thead>
           <tr class="border-b border-slate-200 dark:border-slate-800">
-            <th class="text-left px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:endpoint, "Endpoint") %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:avg_duration, "Avg", align: :right) %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:p95_duration, "P95", align: :right) %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:request_count, "Requests", align: :right) %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:avg_db_runtime, "DB Time", align: :right) %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:avg_query_count, "Queries", align: :right) %></th>
-            <th class="text-right px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider"><%= sort_link(:error_rate, "Error Rate", align: :right) %></th>
+            <%= sortable_header(:endpoint, "Endpoint", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :left) %>
+            <%= sortable_header(:avg_duration, "Avg", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:p95_duration, "P95", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:request_count, "Requests", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:avg_db_runtime, "DB Time", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:avg_query_count, "Queries", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:error_rate, "Error Rate", path_helper: :faultline_performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
           </tr>
         </thead>
         <tbody>
