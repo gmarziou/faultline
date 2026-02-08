@@ -9,13 +9,13 @@ module Faultline
           def request(req, body = nil, &block)
             return super unless SpanCollector.active?
 
-            start_time = Time.now.to_f
+            start_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
             response = nil
 
             begin
               response = super
             ensure
-              end_time = Time.now.to_f
+              end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
               duration_ms = (end_time - start_time) * 1000
 
               uri = "#{use_ssl? ? 'https' : 'http'}://#{address}:#{port}#{req.path}"
@@ -25,7 +25,6 @@ module Faultline
               SpanCollector.record_span(
                 type: :http,
                 description: description,
-                start_time: start_time,
                 duration_ms: duration_ms,
                 metadata: {
                   method: req.method,

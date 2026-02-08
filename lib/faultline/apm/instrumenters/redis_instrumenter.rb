@@ -42,7 +42,6 @@ module Faultline
             SpanCollector.record_span(
               type: :redis,
               description: description,
-              start_time: event.time.to_f,
               duration_ms: event.duration,
               metadata: {
                 command: command_name,

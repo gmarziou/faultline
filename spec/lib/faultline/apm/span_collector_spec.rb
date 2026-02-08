@@ -25,7 +25,6 @@ RSpec.describe Faultline::Apm::SpanCollector do
       described_class.record_span(
         type: :sql,
         description: "SELECT * FROM users",
-        start_time: Time.now.to_f,
         duration_ms: 5.0
       )
 
@@ -34,12 +33,10 @@ RSpec.describe Faultline::Apm::SpanCollector do
 
     it "records span when active" do
       described_class.start_request
-      start_time = described_class.request_start_time + 0.001
 
       described_class.record_span(
         type: :sql,
         description: "SELECT * FROM users",
-        start_time: start_time,
         duration_ms: 5.0,
         metadata: { cached: false }
       )
@@ -54,18 +51,20 @@ RSpec.describe Faultline::Apm::SpanCollector do
 
     it "calculates start_offset_ms relative to request start" do
       described_class.start_request
-      request_start = described_class.request_start_time
 
-      # Record span 10ms after request start
+      # Simulate some time passing (10ms)
+      sleep(0.010)
+
+      # Record span with 1ms duration - offset should be ~10ms (time since request start minus duration)
       described_class.record_span(
         type: :sql,
         description: "test",
-        start_time: request_start + 0.010,
         duration_ms: 1.0
       )
 
       spans = described_class.collect_spans
-      expect(spans.first[:start_offset_ms]).to be_within(1).of(10.0)
+      # Offset should be around 9-10ms (10ms elapsed - 1ms duration = 9ms, but timing isn't exact)
+      expect(spans.first[:start_offset_ms]).to be_within(5).of(9.0)
     end
   end
 
@@ -75,7 +74,6 @@ RSpec.describe Faultline::Apm::SpanCollector do
       described_class.record_span(
         type: :sql,
         description: "test",
-        start_time: Time.now.to_f,
         duration_ms: 1.0
       )
 

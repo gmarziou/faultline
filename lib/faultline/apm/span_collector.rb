@@ -9,18 +9,25 @@ module Faultline
       class << self
         def start_request
           Thread.current[THREAD_KEY_SPANS] = []
-          Thread.current[THREAD_KEY_START_TIME] = Time.now.to_f
+          Thread.current[THREAD_KEY_START_TIME] = monotonic_now
         end
 
         def request_start_time
           Thread.current[THREAD_KEY_START_TIME]
         end
 
-        def record_span(type:, description:, start_time:, duration_ms:, metadata: {})
+        def record_span(type:, description:, duration_ms:, metadata: {})
           return unless Thread.current[THREAD_KEY_SPANS]
 
-          request_start = Thread.current[THREAD_KEY_START_TIME] || start_time
-          offset_ms = ((start_time - request_start) * 1000).round(2)
+          request_start = Thread.current[THREAD_KEY_START_TIME]
+          return unless request_start
+
+          # Calculate offset using monotonic clock: callback runs right after event ends,
+          # so event_start = now - duration
+          now = monotonic_now
+          event_start = now - (duration_ms / 1000.0)
+          offset_ms = ((event_start - request_start) * 1000).round(2)
+          offset_ms = [offset_ms, 0].max # Clamp negative offsets to 0
 
           Thread.current[THREAD_KEY_SPANS] << {
             type: type.to_s,
@@ -29,6 +36,10 @@ module Faultline
             duration_ms: duration_ms.round(2),
             metadata: metadata
           }
+        end
+
+        def monotonic_now
+          Process.clock_gettime(Process::CLOCK_MONOTONIC)
         end
 
         def collect_spans

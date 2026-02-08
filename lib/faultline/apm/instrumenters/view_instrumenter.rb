@@ -57,7 +57,6 @@ module Faultline
             SpanCollector.record_span(
               type: :view,
               description: description,
-              start_time: event.time.to_f,
               duration_ms: event.duration,
               metadata: {
                 view_type: view_type,
