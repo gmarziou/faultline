@@ -51,7 +51,7 @@ module Faultline
       @period = params[:period].presence || "24h"
       @since = period_to_time(@period)
       @search = params[:q].to_s.strip
-      @sort = params[:sort].presence_in(REQUESTS_SORT_COLUMNS) || "db_query_count"
+      @sort = params[:sort].presence_in(REQUESTS_SORT_COLUMNS) || "created_at"
       @dir = params[:dir] == "asc" ? :asc : :desc
       @page = [(params[:page] || 1).to_i, 1].max
 
