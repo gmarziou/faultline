@@ -63,7 +63,7 @@ module Faultline
       justify_class = { left: "", center: "justify-center", right: "justify-end" }[align]
 
       content_tag(:th, class: "#{align_class} px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider") do
-        link_to send(path_helper, path_params.merge(sort: column, dir: new_dir, page: 1)),
+        link_to faultline.send(path_helper, path_params.merge(sort: column, dir: new_dir, page: 1)),
                 class: "group inline-flex items-center gap-1 w-full #{justify_class}" do
           concat content_tag(:span, label)
           concat content_tag(:span, icon, class: "material-symbols-outlined text-sm #{icon_class} transition-opacity")
