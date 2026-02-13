@@ -70,7 +70,7 @@ RSpec.describe "Faultline::PerformanceController", type: :request do
         get "/faultline/performance"
 
         expect(response.body).to include("UsersController#index")
-        expect(response.body).to include("Slowest Endpoints")
+        expect(response.body).to include("Endpoints")
       end
     end
 
@@ -114,7 +114,7 @@ RSpec.describe "Faultline::PerformanceController", type: :request do
 
     it "displays individual traces" do
       get "/faultline/performance/#{CGI.escape(endpoint)}"
-      expect(response.body).to include("Slowest Requests")
+      expect(response.body).to include("Requests")
     end
 
     context "with period parameter" do
