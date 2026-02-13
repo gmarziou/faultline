@@ -55,7 +55,7 @@
   new Chart(overviewCtx, {
     type: 'bar',
     data: {
-      labels: <%= @chart_data.keys.map { |d| d.strftime(time_format) }.to_json.html_safe %>,
+      labels: <%= @chart_data.keys.map { |d| d.respond_to?(:strftime) ? d.strftime(time_format) : Time.zone.parse(d.to_s).strftime(time_format) }.to_json.html_safe %>,
       datasets: [{
         label: 'Occurrences',
         data: <%= @chart_data.values.to_json %>,

@@ -13,19 +13,34 @@ module Faultline
         scope = all
         scope = scope.where("created_at >= ?", config[:duration].ago) if config[:duration]
 
-        case config[:granularity]
+        group_expr = date_trunc_sql(config[:granularity])
+        scope.group(Arel.sql(group_expr))
+             .order(Arel.sql(group_expr))
+             .count
+      end
+
+      def date_trunc_sql(granularity)
+        adapter = connection.adapter_name.downcase
+
+        case granularity
         when :minute
-          scope.group(Arel.sql("date_trunc('minute', created_at)"))
-               .order(Arel.sql("date_trunc('minute', created_at)"))
-               .count
+          if adapter.include?("postgresql")
+            "date_trunc('minute', created_at)"
+          elsif adapter.include?("mysql")
+            "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')"
+          else
+            "strftime('%Y-%m-%d %H:%M:00', created_at)"
+          end
         when :hour
-          scope.group(Arel.sql("date_trunc('hour', created_at)"))
-               .order(Arel.sql("date_trunc('hour', created_at)"))
-               .count
+          if adapter.include?("postgresql")
+            "date_trunc('hour', created_at)"
+          elsif adapter.include?("mysql")
+            "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')"
+          else
+            "strftime('%Y-%m-%d %H:00:00', created_at)"
+          end
         else
-          scope.group(Arel.sql("DATE(created_at)"))
-               .order(Arel.sql("DATE(created_at)"))
-               .count
+          "DATE(created_at)"
         end
       end
 
@@ -45,9 +60,19 @@ module Faultline
         )
 
         custom_data.each do |key, value|
+          serialized_value = if value.is_a?(String)
+                               value
+                             else
+                               begin
+                                 value.to_json
+                               rescue SystemStackError, JSON::NestingError
+                                 value.inspect.truncate(5000)
+                               end
+                             end
+
           occurrence.error_contexts.create!(
             key: key.to_s,
-            value: value.is_a?(String) ? value : value.to_json
+            value: serialized_value
           )
         end
 
@@ -81,7 +106,7 @@ module Faultline
       def filter_params(params)
         filter_fields = Faultline.configuration.resolved_filter_parameters
         filter = ActiveSupport::ParameterFilter.new(filter_fields)
-        filtered = filter.filter(params.to_unsafe_h)
+        filtered = filter.filter(params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params.to_h)
         json = filtered.to_json
         # Truncate large params to prevent storage issues
         json.length > 50_000 ? json[0, 50_000] + '..."truncated"}' : json

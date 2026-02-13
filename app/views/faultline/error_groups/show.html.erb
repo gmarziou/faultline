@@ -137,7 +137,7 @@
 %>
 <script>
   const ctx = document.getElementById('occurrencesChart').getContext('2d');
-  const timestamps = <%= @chart_data.keys.map { |d| d.iso8601 }.to_json.html_safe %>;
+  const timestamps = <%= @chart_data.keys.map { |d| d.respond_to?(:iso8601) ? d.iso8601 : Time.zone.parse(d.to_s).iso8601 }.to_json.html_safe %>;
   const canZoom = <%= (!@zoomed && granularity != :minute).to_json %>;
   const zoomInterval = <%= zoom_interval %>;
   const baseUrl = '<%= faultline.error_group_path(@error_group) %>';
@@ -146,7 +146,7 @@
   new Chart(ctx, {
     type: 'bar',
     data: {
-      labels: <%= @chart_data.keys.map { |d| d.strftime(time_format) }.to_json.html_safe %>,
+      labels: <%= @chart_data.keys.map { |d| d.respond_to?(:strftime) ? d.strftime(time_format) : Time.zone.parse(d.to_s).strftime(time_format) }.to_json.html_safe %>,
       datasets: [{
         label: 'Occurrences',
         data: <%= @chart_data.values.to_json %>,

@@ -137,6 +137,67 @@ RSpec.describe Faultline::ErrorOccurrence, type: :model do
     end
   end
 
+  describe ".date_trunc_sql" do
+    it "returns strftime expression for minute granularity on SQLite" do
+      result = described_class.date_trunc_sql(:minute)
+      expect(result).to include("strftime")
+      expect(result).to include("%M")
+    end
+
+    it "returns strftime expression for hour granularity on SQLite" do
+      result = described_class.date_trunc_sql(:hour)
+      expect(result).to include("strftime")
+      expect(result).to include("%H")
+    end
+
+    it "returns DATE expression for day granularity" do
+      result = described_class.date_trunc_sql(:day)
+      expect(result).to eq("DATE(created_at)")
+    end
+
+    it "returns date_trunc for PostgreSQL adapter" do
+      allow(described_class.connection).to receive(:adapter_name).and_return("PostgreSQL")
+
+      expect(described_class.date_trunc_sql(:minute)).to include("date_trunc")
+      expect(described_class.date_trunc_sql(:hour)).to include("date_trunc")
+    end
+
+    it "returns DATE_FORMAT for MySQL adapter" do
+      allow(described_class.connection).to receive(:adapter_name).and_return("Mysql2")
+
+      expect(described_class.date_trunc_sql(:minute)).to include("DATE_FORMAT")
+      expect(described_class.date_trunc_sql(:hour)).to include("DATE_FORMAT")
+    end
+  end
+
+  describe ".occurrences_over_time" do
+    let(:error_group) { create(:error_group) }
+
+    it "returns a hash of counts grouped by time" do
+      create(:error_occurrence, error_group: error_group, created_at: 1.hour.ago)
+      create(:error_occurrence, error_group: error_group, created_at: 30.minutes.ago)
+
+      result = described_class.occurrences_over_time(period: "1d")
+      expect(result).to be_a(Hash)
+      expect(result.values.sum).to eq(2)
+    end
+
+    it "filters by period duration" do
+      create(:error_occurrence, error_group: error_group, created_at: 2.days.ago)
+      create(:error_occurrence, error_group: error_group, created_at: 30.minutes.ago)
+
+      result = described_class.occurrences_over_time(period: "1h")
+      expect(result.values.sum).to eq(1)
+    end
+
+    it "falls back to 1d config for unknown periods" do
+      create(:error_occurrence, error_group: error_group, created_at: 1.hour.ago)
+
+      result = described_class.occurrences_over_time(period: "unknown")
+      expect(result).to be_a(Hash)
+    end
+  end
+
   describe ".filter_params" do
     it "returns JSON string of parameters" do
       params = ActionController::Parameters.new(name: "John", age: 30)
@@ -190,11 +251,21 @@ RSpec.describe Faultline::ErrorOccurrence, type: :model do
 
     it "returns empty JSON object on error" do
       bad_params = double("params")
+      allow(bad_params).to receive(:respond_to?).with(:to_unsafe_h).and_return(true)
       allow(bad_params).to receive(:to_unsafe_h).and_raise(StandardError.new("bad"))
 
       expect(Rails.logger).to receive(:error).with(/Failed to filter params/)
       result = described_class.filter_params(bad_params)
       expect(result).to eq("{}")
+    end
+
+    it "handles HashWithIndifferentAccess params without to_unsafe_h" do
+      params = ActiveSupport::HashWithIndifferentAccess.new(name: "John", age: 30)
+      result = described_class.filter_params(params)
+
+      parsed = JSON.parse(result)
+      expect(parsed["name"]).to eq("John")
+      expect(parsed["age"]).to eq(30)
     end
   end
 
@@ -344,6 +415,35 @@ RSpec.describe Faultline::ErrorOccurrence, type: :model do
       params = occurrence.parsed_request_params
       expect(params["user"]["name"]).to eq("Jane")
       expect(params["user"]["password"]).to eq("[FILTERED]")
+    end
+
+    it "creates error contexts from custom_data" do
+      occurrence = described_class.create_from_exception!(
+        exception,
+        error_group: error_group,
+        custom_data: { usuario_id: "1", conta_id: 107 }
+      )
+
+      contexts = occurrence.error_contexts
+      expect(contexts.count).to eq(2)
+      expect(contexts.find_by(key: "usuario_id").value).to eq("1")
+      expect(contexts.find_by(key: "conta_id").value).to eq("107")
+    end
+
+    it "handles custom_data values with circular references gracefully" do
+      circular_hash = {}
+      circular_hash[:self] = circular_hash
+
+      occurrence = described_class.create_from_exception!(
+        exception,
+        error_group: error_group,
+        custom_data: { debug: circular_hash }
+      )
+
+      context = occurrence.error_contexts.find_by(key: "debug")
+      expect(context).to be_present
+      expect(context.value).to be_a(String)
+      expect(context.value.length).to be <= 5000
     end
 
     it "captures only safe headers during exception tracking" do
