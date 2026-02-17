@@ -2,9 +2,20 @@
 
 module Faultline
   module Apm
+    # Collects APM spans for the current request using Thread-local storage.
+    #
+    # Thread-safety: all state is stored in Thread.current, so each thread
+    # (and Fiber in Fiber-based servers like Falcon) has its own isolated
+    # span list. This means SpanCollector is safe under threaded servers
+    # (Puma) with no locking required. However, spans recorded on a
+    # background thread spawned during a request will NOT be captured,
+    # since they run on a different Thread.current.
     class SpanCollector
       THREAD_KEY_SPANS = :faultline_apm_spans
       THREAD_KEY_START_TIME = :faultline_apm_request_start
+
+      # Large negative offset (ms) that suggests a clock anomaly worth logging.
+      ANOMALY_THRESHOLD_MS = -100
 
       class << self
         def start_request
@@ -27,7 +38,16 @@ module Faultline
           now = monotonic_now
           event_start = now - (duration_ms / 1000.0)
           offset_ms = ((event_start - request_start) * 1000).round(2)
-          offset_ms = [offset_ms, 0].max # Clamp negative offsets to 0
+
+          if offset_ms < ANOMALY_THRESHOLD_MS
+            Rails.logger.warn(
+              "[Faultline] Span timing anomaly: #{type} '#{description}' has offset " \
+              "#{offset_ms.round}ms (duration=#{duration_ms.round(1)}ms). " \
+              "Clamping to 0."
+            )
+          end
+
+          offset_ms = [offset_ms, 0].max
 
           Thread.current[THREAD_KEY_SPANS] << {
             type: type.to_s,
