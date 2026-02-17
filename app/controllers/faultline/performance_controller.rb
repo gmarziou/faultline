@@ -73,7 +73,7 @@ module Faultline
       # Apply search filter
       filtered_scope = scope
       if @search.present?
-        filtered_scope = filtered_scope.where("path LIKE ?", "%#{sanitize_like(@search)}%")
+        filtered_scope = filtered_scope.where("path LIKE ?", "%#{ActiveRecord::Base.sanitize_sql_like(@search)}%")
       end
 
       # Pagination with dynamic sort
@@ -91,10 +91,6 @@ module Faultline
     def period_to_time(period)
       config = RequestTrace::PERIODS[period]
       config ? config[:duration].ago : 24.hours.ago
-    end
-
-    def sanitize_like(str)
-      str.gsub(/[%_\\]/) { |m| "\\#{m}" }
     end
 
     # Time bucket for cache keys - rounds to nearest minute
