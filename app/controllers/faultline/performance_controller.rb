@@ -17,7 +17,7 @@ module Faultline
       @page = [(params[:page] || 1).to_i, 1].max
 
       # Cache stats and chart data (not affected by search/sort/page)
-      cache_key = "faultline:perf:index:#{@period}:#{cache_time_bucket}"
+      cache_key = "faultline:v1:perf:index:#{@period}:#{cache_time_bucket}"
 
       cached = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
         {
@@ -58,7 +58,7 @@ module Faultline
       scope = RequestTrace.for_endpoint(@endpoint).since(@since)
 
       # Cache stats and chart data for 1 minute
-      cache_key = "faultline:perf:show:#{@endpoint}:#{@period}:#{cache_time_bucket}"
+      cache_key = "faultline:v1:perf:show:#{@endpoint}:#{@period}:#{cache_time_bucket}"
 
       cached = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
         {
