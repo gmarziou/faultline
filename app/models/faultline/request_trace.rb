@@ -2,6 +2,8 @@
 
 module Faultline
   class RequestTrace < ApplicationRecord
+    extend SqlTimeGrouping
+
     has_one :profile, class_name: "Faultline::RequestProfile", dependent: :destroy
 
     scope :recent, -> { order(created_at: :desc) }
@@ -217,30 +219,6 @@ module Faultline
         end
       end
 
-      def date_trunc_sql(granularity)
-        adapter = connection.adapter_name.downcase
-
-        case granularity
-        when :minute
-          if adapter.include?("postgresql")
-            "date_trunc('minute', created_at)"
-          elsif adapter.include?("mysql")
-            "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')"
-          else
-            "strftime('%Y-%m-%d %H:%M:00', created_at)"
-          end
-        when :hour
-          if adapter.include?("postgresql")
-            "date_trunc('hour', created_at)"
-          elsif adapter.include?("mysql")
-            "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')"
-          else
-            "strftime('%Y-%m-%d %H:00:00', created_at)"
-          end
-        else
-          "DATE(created_at)"
-        end
-      end
     end
   end
 end

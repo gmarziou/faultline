@@ -2,6 +2,7 @@
 
 require "faultline/version"
 require "faultline/configuration"
+require "faultline/sql_time_grouping"
 require "faultline/engine"
 require "faultline/tracker"
 require "faultline/middleware"

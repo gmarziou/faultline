@@ -2,6 +2,8 @@
 
 module Faultline
   class ErrorGroup < ApplicationRecord
+    extend SqlTimeGrouping
+
     has_many :error_occurrences, class_name: "Faultline::ErrorOccurrence", dependent: :destroy
     has_many :recent_occurrences, -> { order(created_at: :desc).limit(10) },
              class_name: "Faultline::ErrorOccurrence"
@@ -172,34 +174,7 @@ module Faultline
     private
 
     def date_trunc_sql(granularity)
-      adapter = self.class.connection.adapter_name.downcase
-
-      case granularity
-      when :minute
-        if adapter.include?("postgresql")
-          "date_trunc('minute', created_at)"
-        elsif adapter.include?("mysql")
-          "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')"
-        else # SQLite
-          "strftime('%Y-%m-%d %H:%M:00', created_at)"
-        end
-      when :hour
-        if adapter.include?("postgresql")
-          "date_trunc('hour', created_at)"
-        elsif adapter.include?("mysql")
-          "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')"
-        else # SQLite
-          "strftime('%Y-%m-%d %H:00:00', created_at)"
-        end
-      else # :day
-        if adapter.include?("postgresql")
-          "DATE(created_at)"
-        elsif adapter.include?("mysql")
-          "DATE(created_at)"
-        else # SQLite
-          "DATE(created_at)"
-        end
-      end
+      self.class.date_trunc_sql(granularity)
     end
 
     def increment_occurrences!

@@ -2,6 +2,8 @@
 
 module Faultline
   class ErrorOccurrence < ApplicationRecord
+    extend SqlTimeGrouping
+
     belongs_to :error_group, class_name: "Faultline::ErrorGroup", counter_cache: :occurrences_count
     has_many :error_contexts, class_name: "Faultline::ErrorContext", dependent: :destroy
 
@@ -17,31 +19,6 @@ module Faultline
         scope.group(Arel.sql(group_expr))
              .order(Arel.sql(group_expr))
              .count
-      end
-
-      def date_trunc_sql(granularity)
-        adapter = connection.adapter_name.downcase
-
-        case granularity
-        when :minute
-          if adapter.include?("postgresql")
-            "date_trunc('minute', created_at)"
-          elsif adapter.include?("mysql")
-            "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')"
-          else
-            "strftime('%Y-%m-%d %H:%M:00', created_at)"
-          end
-        when :hour
-          if adapter.include?("postgresql")
-            "date_trunc('hour', created_at)"
-          elsif adapter.include?("mysql")
-            "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')"
-          else
-            "strftime('%Y-%m-%d %H:00:00', created_at)"
-          end
-        else
-          "DATE(created_at)"
-        end
       end
 
       def create_from_exception!(exception, error_group:, request: nil, user: nil, custom_data: {}, local_variables: nil)
