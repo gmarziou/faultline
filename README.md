@@ -25,7 +25,7 @@ A self-hosted error tracking engine for Rails 8+ applications. Track errors, get
 - **Standalone Dashboard** - Clean Tailwind UI with interactive charts and time-range zooming
 - **Configurable Authentication** - Integrate with Devise, Warden, or custom auth
 - **Request Context** - Capture URL, params, headers, user info, and custom data
-- **Basic APM** - Track response times, throughput, and database query counts per endpoint
+- **APM (Experimental)** - Track response times, throughput, database query counts, span waterfall timelines, and CPU flame graphs per endpoint
 
 ## Requirements
 
@@ -329,9 +329,10 @@ The engine creates three tables for error tracking:
 - `faultline_error_occurrences` - Individual error instances
 - `faultline_error_contexts` - Custom key-value context data
 
-And one table for APM (if enabled):
+And two tables for APM (if enabled):
 
-- `faultline_request_traces` - Individual request performance data
+- `faultline_request_traces` - Individual request performance data, including span JSON
+- `faultline_request_profiles` - CPU profile data for flame graph visualization (when profiling is enabled)
 
 ## Data Retention
 
@@ -353,6 +354,8 @@ Faultline::ErrorOccurrence
 
 ## APM (Application Performance Monitoring)
 
+> **Experimental**: APM support is new and may have rough edges. The schema, configuration options, and dashboard are subject to change in future releases. Feedback welcome.
+
 Faultline includes basic APM to track request performance alongside your errors. It's lightweight, automatic, and requires no code changes.
 
 ### What It Tracks
@@ -365,6 +368,8 @@ Faultline includes basic APM to track request performance alongside your errors.
 | Query count | Number of SQL queries per request |
 | Status codes | HTTP response status (200, 500, etc.) |
 | Throughput | Requests per minute/hour |
+| Spans | Individual SQL, HTTP, Redis, and view operations with timing |
+| Profiles | CPU flame graphs via stackprof (opt-in) |
 
 ### How It Works
 
@@ -422,6 +427,18 @@ Faultline.configure do |config|
 
   # Data retention in days (default: 30)
   config.apm_retention_days = 30
+
+  # Capture individual operation spans (SQL, HTTP, Redis, views) — default: true
+  # Adds a waterfall timeline to each request trace detail page
+  # Capped at 500 spans per request to limit memory use
+  config.apm_capture_spans = true
+
+  # CPU profiling via stackprof (default: false)
+  # Requires the stackprof gem: gem "stackprof"
+  config.apm_enable_profiling = false
+  config.apm_profile_sample_rate = 0.1   # profile 10% of requests
+  config.apm_profile_interval = 1000     # microseconds between samples
+  config.apm_profile_mode = :cpu         # :cpu, :wall, or :object
 end
 ```
 
@@ -437,7 +454,12 @@ end
 **Endpoint detail page** (`/faultline/performance/UsersController%23show`):
 - Stats for a single endpoint
 - Response time chart for that endpoint
-- Individual request traces (paginated, sorted by duration)
+- Individual request traces (sortable, searchable, paginated)
+
+**Trace detail page** (`/faultline/traces/:id`):
+- Full timing breakdown for a single request
+- Waterfall timeline of SQL, HTTP, Redis, and view spans (when `apm_capture_spans` is enabled)
+- Embedded flame graph viewer powered by [speedscope](https://www.speedscope.app/) (when profiling is enabled and the request was sampled)
 
 ### Data Cleanup
 
@@ -471,9 +493,9 @@ The INSERT happens *after* Rails sends the response, so users don't wait for it.
 
 1. **Not a full APM replacement** — This is basic request-level monitoring. It doesn't provide:
    - Distributed tracing across services
-   - Memory/CPU profiling
+   - Memory profiling or GC introspection
    - N+1 query detection
-   - External service call tracking (Redis, HTTP, etc.)
+   - Advanced alerting on performance metrics
 
 2. **Dashboard queries can be slow at scale** — With millions of traces, aggregate queries take longer. Mitigations:
    - Use shorter time periods (1h, 6h instead of 30d)
@@ -517,7 +539,7 @@ The INSERT happens *after* Rails sends the response, so users don't wait for it.
 | Notifications | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Error grouping | ✅ | ❌ | ✅ | ✅ | ✅ |
 | Source maps (JS) | ❌ | ❌ | ✅ | ✅ | ✅ |
-| Performance/APM | ⚠️ Basic | ❌ | ✅ Full | ✅ Full | ❌ |
+| Performance/APM | ⚠️ Experimental | ❌ | ✅ Full | ✅ Full | ❌ |
 | Multi-language | Ruby | Ruby | 30+ | 10+ | 20+ |
 
 **Faultline is ideal for:**
