@@ -59,7 +59,8 @@ module Faultline
       scope = RequestTrace.for_endpoint(@endpoint).since(@since)
 
       # Cache stats and chart data for 1 minute
-      cache_key = "faultline:v1:perf:show:#{@endpoint}:#{@period}:#{cache_time_bucket}"
+      endpoint_digest = Digest::SHA1.hexdigest("#{@endpoint}:#{@period}")
+      cache_key = "faultline:v1:perf:show:#{endpoint_digest}:#{cache_time_bucket}"
 
       cached = Rails.cache.fetch(cache_key, expires_in: CACHE_TTL) do
         {
