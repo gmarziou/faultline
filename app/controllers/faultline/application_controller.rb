@@ -39,7 +39,7 @@ module Faultline
       @current_faultline_user = begin
         config = Faultline.configuration
 
-        if defined?(current_user)
+        if respond_to?(:current_user)
           current_user
         elsif session[:user_id] && config.user_class_constant
           config.user_class_constant.find_by(id: session[:user_id])

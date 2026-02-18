@@ -39,7 +39,8 @@ module Faultline
         Rails.logger.error "[Faultline] Notifier #{notifier.class.name} failed: #{e.message}"
       end
 
-      # Update last_notified_at for rate limiting
+      # update_column intentionally bypasses callbacks and updated_at to avoid
+      # touching the record's timestamp for a pure housekeeping write.
       error_group.update_column(:last_notified_at, Time.current)
     rescue => e
       Rails.logger.error "[Faultline] Notification delivery failed: #{e.message}"

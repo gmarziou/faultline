@@ -58,6 +58,10 @@ module Faultline
         def encode_profile(results)
           return nil unless results
 
+          # Marshal is used because StackProf results contain Symbols and
+          # complex structures that JSON cannot represent losslessly.
+          # SECURITY: this data is stored internally and must never be loaded
+          # from user-supplied input — Marshal.load on untrusted data is an RCE vector.
           Base64.encode64(Marshal.dump(results))
         end
       end

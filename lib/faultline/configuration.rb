@@ -45,7 +45,8 @@ module Faultline
         "ActionController::RoutingError",
         "ActionController::UnknownFormat",
         "ActionController::InvalidAuthenticityToken",
-        "ActionController::BadRequest"
+        "ActionController::BadRequest",
+        "Rack::Utils::InvalidParameterError"
       ]
       @ignored_user_agents = [
         /bot/i, /crawler/i, /spider/i, /Googlebot/i, /Bingbot/i, /Slurp/i

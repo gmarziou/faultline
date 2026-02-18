@@ -68,7 +68,13 @@ module Faultline
       end
 
       def tables_exist?
-        ActiveRecord::Base.connection.table_exists?("faultline_error_groups")
+        # Cache the result: table existence is checked on every track call,
+        # so avoid a schema lookup on every request once we know tables are present.
+        # The ivar is never reset in production; in tests reset via
+        #   Faultline::Tracker.instance_variable_set(:@tables_exist, nil)
+        return @tables_exist if instance_variable_defined?(:@tables_exist)
+
+        @tables_exist = ActiveRecord::Base.connection.table_exists?("faultline_error_groups")
       rescue
         false
       end
