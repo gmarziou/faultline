@@ -28,6 +28,10 @@ module Faultline
           local_variables: context[:local_variables]
         )
 
+        # Reload to pick up counter cache increment from occurrence creation,
+        # so occurrences_count is accurate for notification threshold checks.
+        error_group.reload
+
         # Notify if needed
         if should_notify?(error_group, occurrence)
           Faultline.notify(error_group, occurrence)
