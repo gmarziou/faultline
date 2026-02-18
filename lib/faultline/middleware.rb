@@ -146,20 +146,11 @@ module Faultline
     end
 
     def should_ignore?(exception, env)
-      config = Faultline.configuration
-
-      # Check ignored exceptions
-      return true if config.ignored_exceptions.include?(exception.class.name)
-
-      # Check ignored paths
+      # Only path-based ignoring lives here; exception class and user agent
+      # filtering is handled authoritatively by Tracker.should_track? so there
+      # is a single place to update those rules.
       path = env["PATH_INFO"].to_s
-      return true if config.middleware_ignore_paths.any? { |p| path.start_with?(p) }
-
-      # Check ignored user agents
-      user_agent = env["HTTP_USER_AGENT"].to_s
-      return true if config.ignored_user_agents.any? { |pattern| user_agent.match?(pattern) }
-
-      false
+      Faultline.configuration.middleware_ignore_paths.any? { |p| path.start_with?(p) }
     end
 
     def extract_user(env)

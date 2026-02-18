@@ -53,16 +53,10 @@ RSpec.describe Faultline::Middleware do
   end
 
   describe "#should_ignore?" do
+    # should_ignore? is now path-only; exception class and user agent filtering
+    # are the sole responsibility of Tracker.should_track?
     before do
-      allow(Faultline.configuration).to receive(:ignored_exceptions).and_return(["ActionController::RoutingError"])
       allow(Faultline.configuration).to receive(:middleware_ignore_paths).and_return(["/health", "/assets"])
-      allow(Faultline.configuration).to receive(:ignored_user_agents).and_return([/bot/i])
-    end
-
-    it "ignores configured exceptions" do
-      exception = ActionController::RoutingError.new("Not found")
-      result = middleware.send(:should_ignore?, exception, env)
-      expect(result).to be true
     end
 
     it "ignores configured paths" do
@@ -72,17 +66,8 @@ RSpec.describe Faultline::Middleware do
       expect(result).to be true
     end
 
-    it "ignores matching user agents" do
-      env = Rack::MockRequest.env_for("/test", "HTTP_USER_AGENT" => "GoogleBot")
-      exception = StandardError.new
-      result = middleware.send(:should_ignore?, exception, env)
-      expect(result).to be true
-    end
-
-    it "does not ignore valid requests" do
-      allow(Faultline.configuration).to receive(:ignored_exceptions).and_return([])
+    it "does not ignore requests outside configured paths" do
       allow(Faultline.configuration).to receive(:middleware_ignore_paths).and_return([])
-      allow(Faultline.configuration).to receive(:ignored_user_agents).and_return([])
       exception = StandardError.new
       result = middleware.send(:should_ignore?, exception, env)
       expect(result).to be false

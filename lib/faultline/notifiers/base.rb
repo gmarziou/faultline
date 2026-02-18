@@ -13,6 +13,11 @@ module Faultline
         raise NotImplementedError, "Subclasses must implement #call"
       end
 
+      # Extension point for per-notifier filtering. Global rules (environment,
+      # cooldown, threshold, first-occurrence) are evaluated by Tracker before
+      # Faultline.notify is called, so this hook is for notifier-specific logic
+      # only — e.g. a notifier that only fires for certain exception classes.
+      # The base implementation allows all notifications through.
       def should_notify?(error_group, error_occurrence)
         true
       end
