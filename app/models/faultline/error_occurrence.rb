@@ -108,8 +108,16 @@ module Faultline
         filter = ActiveSupport::ParameterFilter.new(filter_fields)
         filtered = filter.filter(params.respond_to?(:to_unsafe_h) ? params.to_unsafe_h : params.to_h)
         json = filtered.to_json
-        # Truncate large params to prevent storage issues
-        json.length > 50_000 ? json[0, 50_000] + '..."truncated"}' : json
+
+        # Truncate at the Hash level so the result is always valid JSON.
+        # Slicing the serialized string would produce malformed JSON.
+        if json.length > 50_000
+          truncated = filtered.transform_values { |v| v.to_s.truncate(500) }
+          truncated["_truncated"] = true
+          truncated.to_json
+        else
+          json
+        end
       rescue => e
         Rails.logger.error "[Faultline] Failed to filter params: #{e.class} - #{e.message}"
         "{}"

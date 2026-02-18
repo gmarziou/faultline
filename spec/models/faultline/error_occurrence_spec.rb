@@ -240,13 +240,14 @@ RSpec.describe Faultline::ErrorOccurrence, type: :model do
       expect(parsed["auth"]["token"]).to eq("[FILTERED]")
     end
 
-    it "truncates params exceeding 50KB" do
+    it "truncates params exceeding 50KB and produces valid JSON" do
       large_value = "x" * 60_000
       params = ActionController::Parameters.new(data: large_value)
       result = described_class.filter_params(params)
 
-      expect(result.length).to be <= 50_015 # 50000 + '..."truncated"}'.length
-      expect(result).to end_with('..."truncated"}')
+      parsed = JSON.parse(result)
+      expect(parsed["data"].length).to be <= 500
+      expect(parsed["_truncated"]).to be true
     end
 
     it "returns empty JSON object on error" do
