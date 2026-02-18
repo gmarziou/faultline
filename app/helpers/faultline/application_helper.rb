@@ -46,6 +46,8 @@ module Faultline
     def format_duration(ms)
       return "-" if ms.nil?
 
+      ms = ms.to_f
+
       if ms >= 1000
         "#{(ms / 1000.0).round(2)}s"
       else
