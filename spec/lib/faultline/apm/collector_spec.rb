@@ -2,6 +2,7 @@
 
 require "rails_helper"
 require "faultline/apm/collector"
+require "faultline/apm/span_collector"
 
 RSpec.describe Faultline::Apm::Collector do
   # Track if we started the collector in this test
@@ -336,6 +337,39 @@ RSpec.describe Faultline::Apm::Collector do
       }) { }
 
       expect(Thread.current[described_class::THREAD_KEY]).to eq(0)
+    end
+
+    it "clears SpanCollector state in ensure block even when store_trace raises" do
+      Faultline::Apm::SpanCollector.start_request
+      Faultline::Apm::SpanCollector.record_span(type: :sql, description: "test", duration_ms: 1.0)
+
+      allow(Faultline::RequestTrace).to receive(:create!).and_raise(ActiveRecord::RecordInvalid)
+
+      ActiveSupport::Notifications.instrument("process_action.action_controller", {
+        controller: "UsersController",
+        action: "index",
+        path: "/users",
+        method: "GET"
+      }) { }
+
+      expect(Faultline::Apm::SpanCollector.active?).to be false
+    end
+  end
+
+  describe "column detection" do
+    it "re-checks column existence on every call (no memoization)" do
+      # Simulate column_names changing between calls — the result must
+      # reflect the latest schema, not a stale cached value.
+      call_count = 0
+      allow(Faultline::RequestTrace).to receive(:column_names) do
+        call_count += 1
+        call_count == 1 ? [] : ["spans"]
+      end
+
+      # First call: column absent
+      expect(described_class.send(:column_exists?, :spans)).to be false
+      # Second call: column now present (e.g. migration ran without restart)
+      expect(described_class.send(:column_exists?, :spans)).to be true
     end
   end
 end
