@@ -18,7 +18,8 @@ module Faultline
               end_time = Process.clock_gettime(Process::CLOCK_MONOTONIC)
               duration_ms = (end_time - start_time) * 1000
 
-              uri = "#{use_ssl? ? 'https' : 'http'}://#{address}:#{port}#{req.path}"
+              path_only = req.path&.split("?")&.first
+              uri = "#{use_ssl? ? 'https' : 'http'}://#{address}:#{port}#{path_only}"
               description = "#{req.method} #{uri}"
               description = "#{description[0, 197]}..." if description.length > 200
 
@@ -30,7 +31,7 @@ module Faultline
                   method: req.method,
                   host: address,
                   port: port,
-                  path: req.path&.split("?")&.first,
+                  path: path_only,
                   status: response&.code&.to_i
                 }
               )
