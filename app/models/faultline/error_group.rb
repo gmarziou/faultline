@@ -81,6 +81,12 @@ module Faultline
         Digest::SHA256.hexdigest(components.flatten.compact.join("::"))
       end
 
+      # Normalizes transient values so that different occurrences of the same
+      # error produce the same fingerprint. Trade-off: messages that differ only
+      # in numeric values (e.g. "Expected status 404" vs "Expected status 422")
+      # are collapsed into the same group. This is intentional — preventing
+      # fingerprint explosion from IDs/timestamps outweighs occasional missed
+      # distinctions between numeric variants of the same underlying error.
       def sanitize_message(message)
         return "" if message.nil?
 

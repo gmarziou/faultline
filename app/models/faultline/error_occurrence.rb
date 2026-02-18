@@ -109,7 +109,11 @@ module Faultline
 
         result = {}
         headers.each do |key, value|
-          result[key] = value.to_s.truncate(500) if safe_headers.include?(key.to_s)
+          key_s = key.to_s
+          # Pre-filter by prefix to avoid calling value.to_s on Rack internals
+          # (e.g. rack.input, rack.errors) which may read IO streams.
+          next unless key_s.start_with?("HTTP_", "CONTENT_", "REQUEST_")
+          result[key_s] = value.to_s.truncate(500) if safe_headers.include?(key_s)
         end
 
         result.to_json
