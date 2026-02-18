@@ -138,14 +138,14 @@ module Faultline
     end
 
     def request_context_section
-      return "" unless @error_occurrence.respond_to?(:url) && @error_occurrence.url.present?
+      return "" unless @error_occurrence.request_url.present?
 
       <<~MARKDOWN
         ## Request Context
 
         | Field | Value |
         |-------|-------|
-        | **URL** | `#{@error_occurrence.http_method} #{@error_occurrence.url}` |
+        | **URL** | `#{@error_occurrence.request_method} #{@error_occurrence.request_url}` |
         | **User Agent** | #{@error_occurrence.user_agent&.truncate(80)} |
         | **IP** | #{@error_occurrence.ip_address} |
       MARKDOWN
