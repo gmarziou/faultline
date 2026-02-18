@@ -31,7 +31,7 @@ module Faultline
 
         Thread.current[:faultline_seen_objects] = Set.new
 
-        result = variables.to_h do |name, value|
+        variables.to_h do |name, value|
           serialized = if should_filter?(name, filter_patterns)
                          "[FILTERED]"
                        else
@@ -39,11 +39,10 @@ module Faultline
                        end
           [name.to_s, serialized]
         end
-
-        Thread.current[:faultline_seen_objects] = nil
-        result
       rescue StandardError => e
         { "_serialization_error" => e.message }
+      ensure
+        Thread.current[:faultline_seen_objects] = nil
       end
 
       private
