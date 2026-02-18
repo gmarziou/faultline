@@ -103,8 +103,37 @@
   </div>
   <div class="p-6">
     <% if @chart_data.any? %>
+      <%
+        if @zoomed
+          duration    = @zoom_end - @zoom_start
+          granularity = duration <= 1.hour ? :minute : (duration <= 1.day ? :hour : :day)
+        else
+          period_config = Faultline::ErrorGroup::PERIODS[@period] || {}
+          granularity   = period_config[:granularity] || :day
+        end
+        time_format = case granularity
+                      when :minute then "%H:%M"
+                      when :hour   then "%b %d %H:00"
+                      else              "%b %d"
+                      end
+        zoom_interval = case granularity
+                        when :minute then 60 * 1000
+                        when :hour   then 3600 * 1000
+                        else              86400 * 1000
+                        end
+        oc_labels     = @chart_data.keys.map { |d| d.respond_to?(:strftime) ? d.strftime(time_format) : Time.zone.parse(d.to_s).strftime(time_format) }
+        oc_timestamps = @chart_data.keys.map { |d| d.respond_to?(:iso8601) ? d.iso8601 : Time.zone.parse(d.to_s).iso8601 }
+        can_zoom      = !@zoomed && granularity != :minute
+      %>
       <div class="h-48">
-        <canvas id="occurrencesChart"></canvas>
+        <canvas id="occurrencesChart"
+                data-labels="<%= json_escape(oc_labels.to_json) %>"
+                data-values="<%= json_escape(@chart_data.values.to_json) %>"
+                data-timestamps="<%= json_escape(oc_timestamps.to_json) %>"
+                data-can-zoom="<%= can_zoom %>"
+                data-zoom-interval="<%= zoom_interval %>"
+                data-base-url="<%= faultline.error_group_path(@error_group) %>"
+                data-period="<%= @period %>"></canvas>
       </div>
       <% unless @zoomed %>
         <p class="text-xs text-slate-400 text-center mt-4">Click on a data point to zoom in</p>
@@ -114,80 +143,6 @@
     <% end %>
   </div>
 </div>
-
-<% if @chart_data.any? %>
-<%
-  if @zoomed
-    duration = @zoom_end - @zoom_start
-    granularity = duration <= 1.hour ? :minute : (duration <= 1.day ? :hour : :day)
-  else
-    period_config = Faultline::ErrorGroup::PERIODS[@period] || {}
-    granularity = period_config[:granularity] || :day
-  end
-  time_format = case granularity
-                when :minute then "%H:%M"
-                when :hour then "%b %d %H:00"
-                else "%b %d"
-                end
-  zoom_interval = case granularity
-                  when :minute then 60 * 1000
-                  when :hour then 3600 * 1000
-                  else 86400 * 1000
-                  end
-%>
-<script>
-  const ctx = document.getElementById('occurrencesChart').getContext('2d');
-  const timestamps = <%= @chart_data.keys.map { |d| d.respond_to?(:iso8601) ? d.iso8601 : Time.zone.parse(d.to_s).iso8601 }.to_json.html_safe %>;
-  const canZoom = <%= (!@zoomed && granularity != :minute).to_json %>;
-  const zoomInterval = <%= zoom_interval %>;
-  const baseUrl = '<%= faultline.error_group_path(@error_group) %>';
-  const currentPeriod = '<%= @period %>';
-
-  new Chart(ctx, {
-    type: 'bar',
-    data: {
-      labels: <%= @chart_data.keys.map { |d| d.respond_to?(:strftime) ? d.strftime(time_format) : Time.zone.parse(d.to_s).strftime(time_format) }.to_json.html_safe %>,
-      datasets: [{
-        label: 'Occurrences',
-        data: <%= @chart_data.values.to_json %>,
-        backgroundColor: 'rgba(34, 211, 238, 0.6)',
-        borderColor: '#22d3ee',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-          grid: { color: 'rgba(148, 163, 184, 0.1)' }
-        },
-        x: {
-          grid: { display: false }
-        }
-      },
-      onClick: (event, elements) => {
-        if (canZoom && elements.length > 0) {
-          const index = elements[0].index;
-          const clickedTime = new Date(timestamps[index]);
-          const zoomEnd = new Date(clickedTime.getTime() + zoomInterval);
-          const url = `${baseUrl}?period=${currentPeriod}&zoom_start=${clickedTime.toISOString()}&zoom_end=${zoomEnd.toISOString()}`;
-          window.location = url;
-        }
-      },
-      onHover: (event, elements) => {
-        if (canZoom) {
-          event.native.target.style.cursor = elements.length ? 'pointer' : 'default';
-        }
-      }
-    }
-  });
-</script>
-<% end %>
 
 <div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
   <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">

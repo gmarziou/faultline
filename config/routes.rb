@@ -17,4 +17,12 @@ Faultline::Engine.routes.draw do
   end
 
   resources :error_occurrences, only: [:index, :show]
+
+  resources :performance, only: [:index, :show], constraints: { id: /[^\/]+/ }
+
+  resources :traces, only: [:show] do
+    member do
+      get :profile
+    end
+  end
 end

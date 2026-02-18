@@ -1,0 +1,187 @@
+<div class="mb-6">
+  <%= link_to faultline.performance_index_path(period: @period), class: "inline-flex items-center gap-2 text-sm text-slate-500 hover:text-primary transition-colors" do %>
+    <span class="material-symbols-outlined text-lg">arrow_back</span>
+    <span>Back to Performance</span>
+  <% end %>
+</div>
+
+<!-- Endpoint Header -->
+<div class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden mb-6 glow-border">
+  <div class="px-6 py-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between">
+    <h1 class="text-2xl font-bold text-slate-900 dark:text-white"><%= @endpoint %></h1>
+    <div class="flex items-center gap-1 bg-slate-100 dark:bg-slate-800/50 p-1 rounded-lg border border-slate-200 dark:border-slate-700">
+      <% Faultline::RequestTrace::PERIODS.keys.each do |period| %>
+        <%= link_to period,
+            faultline.performance_path(@endpoint, period: period),
+            class: "px-3 py-1.5 text-xs font-medium rounded-md transition-all #{@period == period ? 'bg-white dark:bg-slate-700 shadow-sm text-primary' : 'hover:bg-white dark:hover:bg-slate-700'}" %>
+      <% end %>
+    </div>
+  </div>
+  <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 divide-x divide-slate-200 dark:divide-slate-800">
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Requests</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= number_with_delimiter(@stats[:total_requests]) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Avg</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= format_duration(@stats[:avg_duration]) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Min</div>
+      <div class="text-lg font-bold text-emerald-500"><%= format_duration(@stats[:min_duration]) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Max</div>
+      <div class="text-lg font-bold text-rose-500"><%= format_duration(@stats[:max_duration]) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">DB Time</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= format_duration(@stats[:avg_db_runtime]) %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Queries</div>
+      <div class="text-lg font-bold text-slate-900 dark:text-white"><%= @stats[:avg_query_count] %></div>
+    </div>
+    <div class="px-6 py-4">
+      <div class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Errors</div>
+      <div class="text-lg font-bold <%= @stats[:error_count] > 0 ? 'text-rose-500' : 'text-emerald-500' %>"><%= @stats[:error_count] %></div>
+    </div>
+  </div>
+</div>
+
+<!-- Response Time Chart -->
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-6 glow-border mb-8">
+  <div class="flex items-center justify-between mb-6">
+    <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Response Time</h3>
+    <div class="flex items-center gap-4 text-xs text-slate-400">
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Avg</span>
+      <span class="flex items-center gap-1"><span class="w-2 h-2 rounded-full bg-amber-400"></span> Max</span>
+    </div>
+  </div>
+  <div class="h-64">
+    <% if @response_time_data.any? %>
+      <%
+        period_config = Faultline::RequestTrace::PERIODS[@period] || {}
+        granularity   = period_config[:granularity] || :hour
+        time_format   = case granularity
+                        when :minute then "%H:%M"
+                        when :hour   then "%b %d %H:00"
+                        else              "%b %d"
+                        end
+        ep_labels = @response_time_data.map { |d|
+          d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s
+        }
+      %>
+      <canvas id="endpointChart"
+              data-labels="<%= json_escape(ep_labels.to_json) %>"
+              data-avg="<%= json_escape(@response_time_data.map { |d| d[:avg] }.to_json) %>"
+              data-max="<%= json_escape(@response_time_data.map { |d| d[:max] }.to_json) %>"></canvas>
+    <% else %>
+      <div class="flex items-center justify-center h-full text-slate-400 text-sm">No data in this period</div>
+    <% end %>
+  </div>
+</section>
+
+<!-- Individual Traces -->
+<section class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl overflow-hidden glow-border">
+  <div class="px-6 py-4 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <h3 class="text-sm font-semibold text-slate-500 dark:text-slate-400 uppercase tracking-wider">Requests</h3>
+      <span class="text-xs text-slate-400"><%= @total_count %> total</span>
+    </div>
+    <%= form_with url: faultline.performance_path(@endpoint), method: :get, local: true, class: "flex items-center gap-2" do %>
+      <%= hidden_field_tag :period, @period %>
+      <%= hidden_field_tag :sort, @sort %>
+      <%= hidden_field_tag :dir, @dir %>
+      <div class="relative">
+        <span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg">search</span>
+        <%= text_field_tag :q, @search,
+            placeholder: "Search paths...",
+            class: "pl-9 pr-4 py-2 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white placeholder-slate-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-colors w-64" %>
+      </div>
+      <% if @search.present? %>
+        <%= link_to faultline.performance_path(@endpoint, period: @period, sort: @sort, dir: @dir),
+            class: "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" do %>
+          <span class="material-symbols-outlined text-lg">close</span>
+        <% end %>
+      <% end %>
+    <% end %>
+  </div>
+  <% if @recent_traces.any? %>
+    <% sort_params = { id: @endpoint, period: @period, q: @search } %>
+    <div class="overflow-x-auto">
+      <table class="w-full text-sm">
+        <thead>
+          <tr class="border-b border-slate-200 dark:border-slate-800">
+            <%= sortable_header(:created_at, "Time", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :left) %>
+            <%= sortable_header(:path, "Request", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :left) %>
+            <%= sortable_header(:status, "Status", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :center) %>
+            <%= sortable_header(:duration_ms, "Duration", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:db_runtime_ms, "DB Time", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:view_runtime_ms, "View Time", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:db_query_count, "Queries", path_helper: :performance_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <th class="text-center px-6 py-3 text-xs font-bold text-slate-400 uppercase tracking-wider">Details</th>
+          </tr>
+        </thead>
+        <tbody>
+          <% @recent_traces.each do |trace| %>
+            <tr class="border-b border-slate-100 dark:border-slate-800/50 hover:bg-slate-50 dark:hover:bg-slate-800/30 transition-colors cursor-pointer"
+                onclick="window.location='<%= faultline.trace_path(trace) %>'">
+              <td class="px-6 py-3 text-slate-500 whitespace-nowrap"><%= trace.created_at.strftime("%b %d %H:%M:%S") %></td>
+              <td class="px-6 py-3">
+                <span class="inline-block px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider mr-2
+                  <%= case trace.http_method
+                      when 'GET' then 'bg-emerald-500/10 text-emerald-500'
+                      when 'POST' then 'bg-blue-500/10 text-blue-500'
+                      when 'PUT', 'PATCH' then 'bg-amber-500/10 text-amber-500'
+                      when 'DELETE' then 'bg-rose-500/10 text-rose-500'
+                      else 'bg-slate-500/10 text-slate-500'
+                      end %>"><%= trace.http_method %></span>
+                <span class="text-slate-700 dark:text-slate-300 font-mono text-xs"><%= trace.path&.truncate(60) %></span>
+              </td>
+              <td class="text-center px-6 py-3">
+                <span class="font-mono text-xs <%= http_status_class(trace.status) %>"><%= trace.status %></span>
+              </td>
+              <td class="text-right px-6 py-3 font-mono <%= trace.duration_ms.to_f > 500 ? 'text-rose-500 font-bold' : trace.duration_ms.to_f > 200 ? 'text-amber-500' : 'text-slate-600 dark:text-slate-300' %>">
+                <%= format_duration(trace.duration_ms) %>
+              </td>
+              <td class="text-right px-6 py-3 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(trace.db_runtime_ms) %></td>
+              <td class="text-right px-6 py-3 font-mono text-slate-600 dark:text-slate-300"><%= format_duration(trace.view_runtime_ms) %></td>
+              <td class="text-right px-6 py-3 text-slate-600 dark:text-slate-300"><%= trace.db_query_count %></td>
+              <td class="text-center px-6 py-3">
+                <div class="flex items-center justify-center gap-1">
+                  <% if trace.has_spans? %>
+                    <span class="material-symbols-outlined text-sm text-cyan-500" title="Has spans">layers</span>
+                  <% end %>
+                  <% if trace.has_profile? %>
+                    <span class="material-symbols-outlined text-sm text-purple-500" title="Has flame graph">local_fire_department</span>
+                  <% end %>
+                  <span class="material-symbols-outlined text-sm text-slate-400">chevron_right</span>
+                </div>
+              </td>
+            </tr>
+          <% end %>
+        </tbody>
+      </table>
+    </div>
+
+    <% if @total_pages > 1 %>
+      <div class="px-6 py-4 border-t border-slate-200 dark:border-slate-800">
+        <%= render "faultline/shared/pagination", page: @page, total_pages: @total_pages %>
+      </div>
+    <% end %>
+  <% else %>
+    <div class="p-12 text-center">
+      <% if @search.present? %>
+        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">search_off</span>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No matching requests</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Try a different search term or <%= link_to "clear the filter", faultline.performance_path(@endpoint, period: @period), class: "text-primary hover:underline" %>.</p>
+      <% else %>
+        <span class="material-symbols-outlined text-5xl text-slate-300 dark:text-slate-600 mb-4 block">speed</span>
+        <h3 class="text-lg font-medium text-slate-900 dark:text-white mb-1">No traces yet</h3>
+        <p class="text-sm text-slate-500 dark:text-slate-400">Request traces for this endpoint will appear here.</p>
+      <% end %>
+    </div>
+  <% end %>
+</section>
+

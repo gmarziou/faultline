@@ -10,6 +10,10 @@
       <div class="hidden md:flex items-center gap-1">
         <%= link_to "Errors", faultline.error_groups_path,
             class: "px-4 py-2 text-sm font-medium rounded-md #{request.path == faultline.root_path || request.path.include?('error') ? 'bg-slate-100 dark:bg-slate-800 text-primary' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}" %>
+        <% if Faultline.configuration&.enable_apm %>
+          <%= link_to "Performance", faultline.performance_index_path,
+              class: "px-4 py-2 text-sm font-medium rounded-md #{request.path.include?('performance') ? 'bg-slate-100 dark:bg-slate-800 text-primary' : 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white'}" %>
+        <% end %>
       </div>
     </div>
     <div class="flex items-center gap-6">

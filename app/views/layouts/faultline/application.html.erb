@@ -7,6 +7,7 @@
 
   <script src="https://cdn.tailwindcss.com?plugins=forms,typography"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <%= javascript_include_tag "faultline/charts", nonce: content_security_policy_nonce rescue javascript_include_tag "faultline/charts" %>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -60,21 +61,5 @@
     <%= render "faultline/shared/footer" %>
   </div>
 
-  <script>
-    function toggleTheme() {
-      const html = document.documentElement;
-      if (html.classList.contains('dark')) {
-        html.classList.remove('dark');
-        localStorage.setItem('faultline-theme', 'light');
-      } else {
-        html.classList.add('dark');
-        localStorage.setItem('faultline-theme', 'dark');
-      }
-    }
-    // Check for saved theme preference
-    if (localStorage.getItem('faultline-theme') === 'light') {
-      document.documentElement.classList.remove('dark');
-    }
-  </script>
 </body>
 </html>
