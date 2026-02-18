@@ -5,7 +5,7 @@ class CreateFaultlineErrorGroups < ActiveRecord::Migration<%= migration_version 
     create_table :faultline_error_groups do |t|
       t.string :fingerprint, null: false
       t.string :exception_class, null: false
-      t.string :sanitized_message, null: false
+      t.text :sanitized_message, null: false
       t.string :file_path
       t.integer :line_number
       t.string :method_name

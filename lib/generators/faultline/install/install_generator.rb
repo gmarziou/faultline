@@ -32,6 +32,8 @@ module Faultline
                            "db/migrate/add_spans_to_faultline_request_traces.rb"
         migration_template "migrations/create_faultline_request_profiles.rb.tt",
                            "db/migrate/create_faultline_request_profiles.rb"
+        migration_template "migrations/change_sanitized_message_to_text.rb.tt",
+                           "db/migrate/change_sanitized_message_to_text.rb"
       end
 
       def add_route

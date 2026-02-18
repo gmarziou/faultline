@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.1].define(version: 2024_01_01_000005) do
+ActiveRecord::Schema[8.1].define(version: 2024_01_01_000006) do
   create_table "faultline_error_contexts", force: :cascade do |t|
     t.datetime "created_at", null: false
     t.integer "error_occurrence_id", null: false
@@ -32,7 +32,7 @@ ActiveRecord::Schema[8.1].define(version: 2024_01_01_000005) do
     t.string "method_name"
     t.integer "occurrences_count", default: 0
     t.datetime "resolved_at"
-    t.string "sanitized_message", null: false
+    t.text "sanitized_message", null: false
     t.string "status", default: "unresolved"
     t.datetime "updated_at", null: false
     t.index ["exception_class"], name: "index_faultline_error_groups_on_exception_class"
