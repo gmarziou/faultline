@@ -39,6 +39,8 @@ module Faultline
       "30d" => { duration: 30.days,  granularity: :day }
     }.freeze
 
+    ERROR_COUNT_SQL = "SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END)".freeze
+
     class << self
       def slowest_endpoints(since: 24.hours.ago, limit: 20)
         where("created_at >= ?", since)
@@ -51,7 +53,7 @@ module Faultline
             "AVG(db_query_count) AS avg_query_count",
             percentile_select("duration_ms", 95, "p95_duration"),
             percentile_select("duration_ms", 50, "p50_duration"),
-            "SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS error_count"
+            "#{ERROR_COUNT_SQL} AS error_count"
           )
           .order(Arel.sql("AVG(duration_ms) DESC"))
           .limit(limit)
@@ -96,7 +98,7 @@ module Faultline
             "AVG(db_query_count) AS avg_query_count",
             percentile_select("duration_ms", 95, "p95_duration"),
             percentile_select("duration_ms", 50, "p50_duration"),
-            "SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END) AS error_count"
+            "#{ERROR_COUNT_SQL} AS error_count"
           )
           .order(Arel.sql(order_sql))
           .offset((page - 1) * per_page)
@@ -149,7 +151,7 @@ module Faultline
           Arel.sql("AVG(duration_ms)"),
           Arel.sql("AVG(db_runtime_ms)"),
           Arel.sql("AVG(db_query_count)"),
-          Arel.sql("SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END)")
+          Arel.sql(ERROR_COUNT_SQL)
         )
 
         total, avg_duration, avg_db_runtime, avg_query_count, error_count = row || [0, 0, 0, 0, 0]

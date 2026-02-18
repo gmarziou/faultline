@@ -107,7 +107,7 @@ module Faultline
         Arel.sql("AVG(duration_ms)"),
         Arel.sql("AVG(db_runtime_ms)"),
         Arel.sql("AVG(db_query_count)"),
-        Arel.sql("SUM(CASE WHEN status >= 500 THEN 1 ELSE 0 END)"),
+        Arel.sql(RequestTrace::ERROR_COUNT_SQL),
         Arel.sql("MIN(duration_ms)"),
         Arel.sql("MAX(duration_ms)")
       )
