@@ -44,6 +44,10 @@ module Faultline
           group.last_seen_at = Time.current
           group.occurrences_count = 0
         end
+      rescue ActiveRecord::RecordNotUnique
+        # Two threads raced to create the same fingerprint. The unique index
+        # prevented a duplicate row; just fetch the winner's record.
+        retry
 
         was_resolved = error_group.status == "resolved"
 
