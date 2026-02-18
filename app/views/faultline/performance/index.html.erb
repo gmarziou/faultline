@@ -177,7 +177,7 @@
   new Chart(rtCtx, {
     type: 'line',
     data: {
-      labels: <%= @response_time_data.map { |d| d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s }.to_json.html_safe %>,
+      labels: <%= json_escape(@response_time_data.map { |d| d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s }.to_json) %>,
       datasets: [
         {
           label: 'Avg',
@@ -232,7 +232,7 @@
   new Chart(tpCtx, {
     type: 'bar',
     data: {
-      labels: <%= @throughput_data.keys.map { |d| d.is_a?(String) ? Time.parse(d).strftime(time_format) : d.strftime(time_format) rescue d.to_s }.to_json.html_safe %>,
+      labels: <%= json_escape(@throughput_data.keys.map { |d| d.is_a?(String) ? Time.parse(d).strftime(time_format) : d.strftime(time_format) rescue d.to_s }.to_json) %>,
       datasets: [{
         label: 'Requests',
         data: <%= @throughput_data.values.to_json %>,
