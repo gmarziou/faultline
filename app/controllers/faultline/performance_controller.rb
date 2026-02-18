@@ -44,6 +44,7 @@ module Faultline
       @endpoints = endpoints_result[:records]
       @total_count = endpoints_result[:total_count]
       @total_pages = endpoints_result[:total_pages]
+      @supports_percentile = RequestTrace.supports_percentile?
     end
 
     def show

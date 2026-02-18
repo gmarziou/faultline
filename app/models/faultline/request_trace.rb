@@ -167,6 +167,12 @@ module Faultline
         where("created_at < ?", retention).delete_all
       end
 
+      def supports_percentile?
+        connection.adapter_name.downcase.include?("postgresql")
+      rescue StandardError
+        false
+      end
+
       def table_exists_for_apm?
         connection.table_exists?("faultline_request_traces")
       rescue StandardError

@@ -107,7 +107,7 @@
           <tr class="border-b border-slate-200 dark:border-slate-800">
             <%= sortable_header(:endpoint, "Endpoint", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :left) %>
             <%= sortable_header(:avg_duration, "Avg", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
-            <%= sortable_header(:p95_duration, "P95", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
+            <%= sortable_header(:p95_duration, @supports_percentile ? "P95" : "Max", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
             <%= sortable_header(:request_count, "Requests", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
             <%= sortable_header(:avg_db_runtime, "DB Time", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
             <%= sortable_header(:avg_query_count, "Queries", path_helper: :performance_index_path, path_params: sort_params, current_sort: @sort, current_dir: @dir, align: :right) %>
