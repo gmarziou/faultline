@@ -22,8 +22,21 @@ RSpec.describe Faultline::Apm::Collector do
   end
 
   describe ".start!" do
-    it "subscribes to sql.active_record notifications" do
-      # Verify subscription by checking the callback fires
+    it "does NOT subscribe to sql.active_record when span collection is enabled" do
+      # When spans are collected, db_query_count is derived from SQL spans;
+      # a separate SQL subscriber would be redundant.
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(true)
+      described_class.start!
+
+      Thread.current[described_class::THREAD_KEY] = nil
+      ActiveSupport::Notifications.instrument("sql.active_record", name: "User Load", sql: "SELECT * FROM users") { }
+
+      expect(Thread.current[described_class::THREAD_KEY]).to be_nil
+    end
+
+    it "subscribes to sql.active_record when span collection is disabled" do
+      # Fallback counter so db_query_count is still recorded without spans.
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(false)
       described_class.start!
 
       Thread.current[described_class::THREAD_KEY] = nil
@@ -50,22 +63,32 @@ RSpec.describe Faultline::Apm::Collector do
   end
 
   describe ".stop!" do
-    it "unsubscribes from notifications" do
+    it "unsubscribes from notifications (2 subscribers when span collection enabled)" do
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(true)
       described_class.start!
 
-      # 3 subscribers: start_processing, sql, and process_action
+      # start_processing + process_action; no SQL subscriber when spans are on
+      expect(ActiveSupport::Notifications).to receive(:unsubscribe).exactly(2).times.and_call_original
+      described_class.stop!
+    end
+
+    it "unsubscribes from notifications (3 subscribers when span collection disabled)" do
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(false)
+      described_class.start!
+
+      # start_processing + sql + process_action
       expect(ActiveSupport::Notifications).to receive(:unsubscribe).exactly(3).times.and_call_original
       described_class.stop!
     end
   end
 
-  describe "SQL query counting" do
+  describe "SQL query counting (fallback, span collection disabled)" do
     before(:each) do
-      # Ensure completely clean state before starting
       described_class.stop!
       Thread.current[described_class::THREAD_KEY] = nil
 
       allow(Faultline.configuration).to receive(:enable_apm).and_return(true)
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(false)
       described_class.start!
     end
 
@@ -74,27 +97,17 @@ RSpec.describe Faultline::Apm::Collector do
     end
 
     it "increments thread-local counter on SQL events" do
-      # Simulate SQL notification
-      ActiveSupport::Notifications.instrument("sql.active_record", name: "User Load", sql: "SELECT * FROM users") do
-        # query executed
-      end
-
+      ActiveSupport::Notifications.instrument("sql.active_record", name: "User Load", sql: "SELECT * FROM users") { }
       expect(Thread.current[described_class::THREAD_KEY]).to eq(1)
     end
 
     it "ignores SCHEMA queries" do
-      ActiveSupport::Notifications.instrument("sql.active_record", name: "SCHEMA", sql: "PRAGMA table_info") do
-        # schema query
-      end
-
+      ActiveSupport::Notifications.instrument("sql.active_record", name: "SCHEMA", sql: "PRAGMA table_info") { }
       expect(Thread.current[described_class::THREAD_KEY]).to be_nil
     end
 
     it "ignores EXPLAIN queries" do
-      ActiveSupport::Notifications.instrument("sql.active_record", name: "EXPLAIN for: SELECT", sql: "EXPLAIN SELECT") do
-        # explain query
-      end
-
+      ActiveSupport::Notifications.instrument("sql.active_record", name: "EXPLAIN for: SELECT", sql: "EXPLAIN SELECT") { }
       expect(Thread.current[described_class::THREAD_KEY]).to be_nil
     end
   end
@@ -193,12 +206,22 @@ RSpec.describe Faultline::Apm::Collector do
       expect(trace.view_runtime_ms).to eq(25.3)
     end
 
-    it "stores query count from thread-local counter" do
+    it "derives query count from SQL spans when span collection is enabled" do
+      # Seed the span collector with 3 SQL spans
+      Faultline::Apm::SpanCollector.start_request
+      3.times { Faultline::Apm::SpanCollector.record_span(type: :sql, description: "SELECT 1", duration_ms: 1.0) }
+
+      ActiveSupport::Notifications.instrument("process_action.action_controller", event_payload) { }
+
+      trace = Faultline::RequestTrace.last
+      expect(trace.db_query_count).to eq(3)
+    end
+
+    it "uses thread-local counter as fallback when span collection is disabled" do
+      allow(Faultline.configuration).to receive(:apm_capture_spans).and_return(false)
       Thread.current[described_class::THREAD_KEY] = 12
 
-      ActiveSupport::Notifications.instrument("process_action.action_controller", event_payload) do
-        # action executed
-      end
+      ActiveSupport::Notifications.instrument("process_action.action_controller", event_payload) { }
 
       trace = Faultline::RequestTrace.last
       expect(trace.db_query_count).to eq(12)

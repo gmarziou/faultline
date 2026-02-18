@@ -3,12 +3,16 @@
 module Faultline
   module Apm
     class Collector
+      # Fallback query counter used only when span collection is disabled
+      # (apm_capture_spans = false). When spans ARE collected, db_query_count
+      # is derived from SQL spans recorded by SqlInstrumenter, avoiding a
+      # second subscriber on sql.active_record for the same events.
       THREAD_KEY = :faultline_apm_query_count
 
       class << self
         def start!
           subscribe_to_start_processing
-          subscribe_to_sql_notifications
+          subscribe_to_sql_notifications unless Faultline.configuration&.apm_capture_spans
           subscribe_to_action_notifications
           start_instrumenters
         end
@@ -104,9 +108,6 @@ module Faultline
           return if should_ignore?(path, config)
           return if config.apm_sample_rate < 1.0 && rand > config.apm_sample_rate
 
-          query_count = Thread.current[THREAD_KEY] || 0
-          Thread.current[THREAD_KEY] = 0
-
           status = payload[:status]
           status = 500 if status.nil? && payload[:exception].present?
 
@@ -114,6 +115,15 @@ module Faultline
           spans = if defined?(SpanCollector) && SpanCollector.active?
                     SpanCollector.collect_spans
                   end
+
+          # Derive query count from SQL spans when available (span collection
+          # enabled). Fall back to the separate THREAD_KEY counter which is
+          # only subscribed when span collection is off.
+          query_count = if spans
+                          spans.count { |s| s[:type] == "sql" }
+                        else
+                          Thread.current[THREAD_KEY] || 0
+                        end
 
           # Stop profiling and get results
           profile_results = defined?(ProfileCollector) ? ProfileCollector.stop_profiling : nil
