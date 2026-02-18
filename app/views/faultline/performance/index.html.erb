@@ -49,7 +49,22 @@
   </div>
   <div class="h-64">
     <% if @response_time_data.any? %>
-      <canvas id="responseTimeChart"></canvas>
+      <%
+        period_config = Faultline::RequestTrace::PERIODS[@period] || {}
+        granularity   = period_config[:granularity] || :hour
+        time_format   = case granularity
+                        when :minute then "%H:%M"
+                        when :hour   then "%b %d %H:00"
+                        else              "%b %d"
+                        end
+        rt_labels = @response_time_data.map { |d|
+          d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s
+        }
+      %>
+      <canvas id="responseTimeChart"
+              data-labels="<%= json_escape(rt_labels.to_json) %>"
+              data-avg="<%= json_escape(@response_time_data.map { |d| d[:avg] }.to_json) %>"
+              data-max="<%= json_escape(@response_time_data.map { |d| d[:max] }.to_json) %>"></canvas>
     <% else %>
       <div class="flex items-center justify-center h-full text-slate-400 text-sm">No data in this period</div>
     <% end %>
@@ -67,7 +82,14 @@
   </div>
   <div class="h-48">
     <% if @throughput_data.any? %>
-      <canvas id="throughputChart"></canvas>
+      <%
+        tp_labels = @throughput_data.keys.map { |d|
+          d.is_a?(String) ? Time.parse(d).strftime(time_format) : d.strftime(time_format) rescue d.to_s
+        }
+      %>
+      <canvas id="throughputChart"
+              data-labels="<%= json_escape(tp_labels.to_json) %>"
+              data-values="<%= json_escape(@throughput_data.values.to_json) %>"></canvas>
     <% else %>
       <div class="flex items-center justify-center h-full text-slate-400 text-sm">No data in this period</div>
     <% end %>
@@ -161,100 +183,3 @@
   <% end %>
 </section>
 
-<%
-  period_config = Faultline::RequestTrace::PERIODS[@period] || {}
-  granularity = period_config[:granularity] || :hour
-  time_format = case granularity
-                when :minute then "%H:%M"
-                when :hour then "%b %d %H:00"
-                else "%b %d"
-                end
-%>
-
-<% if @response_time_data.any? %>
-<script>
-  const rtCtx = document.getElementById('responseTimeChart').getContext('2d');
-  new Chart(rtCtx, {
-    type: 'line',
-    data: {
-      labels: <%= json_escape(@response_time_data.map { |d| d[:bucket].is_a?(String) ? Time.parse(d[:bucket]).strftime(time_format) : d[:bucket].strftime(time_format) rescue d[:bucket].to_s }.to_json) %>,
-      datasets: [
-        {
-          label: 'Avg',
-          data: <%= @response_time_data.map { |d| d[:avg] }.to_json %>,
-          borderColor: '#22d3ee',
-          backgroundColor: 'rgba(34, 211, 238, 0.1)',
-          fill: true,
-          tension: 0.3,
-          borderWidth: 2,
-          pointRadius: 1
-        },
-        {
-          label: 'Max',
-          data: <%= @response_time_data.map { |d| d[:max] }.to_json %>,
-          borderColor: '#f59e0b',
-          backgroundColor: 'transparent',
-          borderDash: [4, 4],
-          tension: 0.3,
-          borderWidth: 1.5,
-          pointRadius: 0
-        }
-      ]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      interaction: { mode: 'index', intersect: false },
-      plugins: {
-        legend: { display: false },
-        tooltip: {
-          callbacks: {
-            label: function(ctx) { return ctx.dataset.label + ': ' + ctx.raw.toFixed(1) + 'ms'; }
-          }
-        }
-      },
-      scales: {
-        y: {
-          beginAtZero: true,
-          grid: { color: 'rgba(148, 163, 184, 0.1)' },
-          ticks: { callback: function(v) { return v + 'ms'; } }
-        },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-</script>
-<% end %>
-
-<% if @throughput_data.any? %>
-<script>
-  const tpCtx = document.getElementById('throughputChart').getContext('2d');
-  new Chart(tpCtx, {
-    type: 'bar',
-    data: {
-      labels: <%= json_escape(@throughput_data.keys.map { |d| d.is_a?(String) ? Time.parse(d).strftime(time_format) : d.strftime(time_format) rescue d.to_s }.to_json) %>,
-      datasets: [{
-        label: 'Requests',
-        data: <%= @throughput_data.values.to_json %>,
-        backgroundColor: 'rgba(244, 63, 94, 0.6)',
-        borderColor: '#f43f5e',
-        borderWidth: 1,
-        borderRadius: 4
-      }]
-    },
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-      plugins: { legend: { display: false } },
-      scales: {
-        y: {
-          beginAtZero: true,
-          ticks: { stepSize: 1 },
-          grid: { color: 'rgba(148, 163, 184, 0.1)' }
-        },
-        x: { grid: { display: false } }
-      }
-    }
-  });
-</script>
-<% end %>

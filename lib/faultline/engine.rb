@@ -40,6 +40,10 @@ module Faultline
       end
     end
 
+    initializer "faultline.assets" do |app|
+      app.config.assets.precompile += %w[faultline/charts.js] if app.config.respond_to?(:assets)
+    end
+
     config.after_initialize do
       if Faultline.configuration&.authenticate_with.nil? && Rails.env.production?
         Rails.logger.warn "[Faultline] No authentication configured. Dashboard is publicly accessible."
