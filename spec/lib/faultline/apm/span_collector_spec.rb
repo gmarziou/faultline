@@ -50,21 +50,18 @@ RSpec.describe Faultline::Apm::SpanCollector do
     end
 
     it "calculates start_offset_ms relative to request start" do
+      t0 = 1000.0
+      # First call returns request start time, second returns "now" when record_span fires
+      allow(described_class).to receive(:monotonic_now).and_return(t0, t0 + 0.010)
+
       described_class.start_request
 
-      # Simulate some time passing (10ms)
-      sleep(0.010)
-
-      # Record span with 1ms duration - offset should be ~10ms (time since request start minus duration)
-      described_class.record_span(
-        type: :sql,
-        description: "test",
-        duration_ms: 1.0
-      )
+      # duration_ms = 1ms  →  event_start = (t0 + 0.010) - 0.001 = t0 + 0.009
+      # offset_ms = (t0 + 0.009 - t0) * 1000 = 9.0
+      described_class.record_span(type: :sql, description: "test", duration_ms: 1.0)
 
       spans = described_class.collect_spans
-      # Offset should be around 9-10ms (10ms elapsed - 1ms duration = 9ms, but timing isn't exact)
-      expect(spans.first[:start_offset_ms]).to be_within(5).of(9.0)
+      expect(spans.first[:start_offset_ms]).to eq(9.0)
     end
   end
 
