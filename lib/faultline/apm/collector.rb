@@ -185,18 +185,16 @@ module Faultline
         end
 
         def column_exists?(column_name)
-          @column_cache ||= {}
-          return @column_cache[column_name] if @column_cache.key?(column_name)
-
-          @column_cache[column_name] = RequestTrace.column_names.include?(column_name.to_s)
+          # Rely on ActiveRecord's own column_names cache (reset automatically on
+          # schema changes) rather than a process-level class variable that would
+          # survive zero-downtime migrations without a server restart.
+          RequestTrace.column_names.include?(column_name.to_s)
         rescue StandardError
           false
         end
 
         def profile_table_exists?
-          return @profile_table_exists if defined?(@profile_table_exists)
-
-          @profile_table_exists = RequestProfile.table_exists?
+          RequestProfile.table_exists?
         rescue StandardError
           false
         end
