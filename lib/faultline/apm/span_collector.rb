@@ -13,9 +13,15 @@ module Faultline
     class SpanCollector
       THREAD_KEY_SPANS = :faultline_apm_spans
       THREAD_KEY_START_TIME = :faultline_apm_request_start
+      THREAD_KEY_SPAN_WARNED = :faultline_apm_span_warned
 
       # Large negative offset (ms) that suggests a clock anomaly worth logging.
       ANOMALY_THRESHOLD_MS = -100
+
+      # Maximum spans stored per request. Requests that exceed this limit (e.g.
+      # N+1 loops) have their remaining spans silently dropped after a one-time
+      # warning, preventing OOM pressure and column size limit violations.
+      MAX_SPANS = 500
 
       class << self
         def start_request
@@ -49,7 +55,19 @@ module Faultline
 
           offset_ms = [offset_ms, 0].max
 
-          Thread.current[THREAD_KEY_SPANS] << {
+          spans = Thread.current[THREAD_KEY_SPANS]
+          if spans.length >= MAX_SPANS
+            unless Thread.current[THREAD_KEY_SPAN_WARNED]
+              Rails.logger.warn(
+                "[Faultline] Span limit (#{MAX_SPANS}) reached for this request. " \
+                "Further spans will be dropped."
+              )
+              Thread.current[THREAD_KEY_SPAN_WARNED] = true
+            end
+            return
+          end
+
+          spans << {
             type: type.to_s,
             description: description,
             start_offset_ms: offset_ms,
@@ -71,6 +89,7 @@ module Faultline
         def clear
           Thread.current[THREAD_KEY_SPANS] = nil
           Thread.current[THREAD_KEY_START_TIME] = nil
+          Thread.current[THREAD_KEY_SPAN_WARNED] = nil
         end
 
         def active?

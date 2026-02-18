@@ -92,4 +92,27 @@ RSpec.describe Faultline::Apm::SpanCollector do
       expect(described_class.request_start_time).to be_nil
     end
   end
+
+  describe "span cap" do
+    it "stops recording after MAX_SPANS spans" do
+      described_class.start_request
+
+      (described_class::MAX_SPANS + 10).times do |i|
+        described_class.record_span(type: :sql, description: "query #{i}", duration_ms: 1.0)
+      end
+
+      spans = described_class.collect_spans
+      expect(spans.length).to eq(described_class::MAX_SPANS)
+    end
+
+    it "logs a warning exactly once when the cap is hit" do
+      described_class.start_request
+
+      expect(Rails.logger).to receive(:warn).once.with(/Span limit/)
+
+      (described_class::MAX_SPANS + 5).times do |i|
+        described_class.record_span(type: :sql, description: "query #{i}", duration_ms: 1.0)
+      end
+    end
+  end
 end
