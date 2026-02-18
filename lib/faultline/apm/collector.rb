@@ -77,6 +77,7 @@ module Faultline
             event = ActiveSupport::Notifications::Event.new(*args)
             next if event.payload[:name] == "SCHEMA"
             next if event.payload[:name]&.start_with?("EXPLAIN")
+            next if faultline_internal_sql?(event.payload[:sql])
 
             Thread.current[THREAD_KEY] = (Thread.current[THREAD_KEY] || 0) + 1
           end
@@ -135,6 +136,10 @@ module Faultline
           Thread.current[THREAD_KEY] = 0
           SpanCollector.clear if defined?(SpanCollector)
           ProfileCollector.clear if defined?(ProfileCollector)
+        end
+
+        def faultline_internal_sql?(sql)
+          sql.to_s.match?(/\bfaultline_/i)
         end
 
         def should_ignore?(path, config)

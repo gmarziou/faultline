@@ -30,6 +30,7 @@ module Faultline
 
             sql = payload[:sql].to_s
             return if sql.blank?
+            return if sql.match?(/\bfaultline_/i)
 
             # Truncate long SQL for display
             description = sql.length > 200 ? "#{sql[0, 200]}..." : sql
