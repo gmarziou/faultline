@@ -21,7 +21,7 @@ module Faultline
       when :minute
         if adapter.include?("postgresql")
           "date_trunc('minute', created_at)"
-        elsif adapter.include?("mysql")
+        elsif adapter.include?("mysql") || adapter.include?("trilogy")
           "DATE_FORMAT(created_at, '%Y-%m-%d %H:%i:00')"
         else # SQLite
           "strftime('%Y-%m-%d %H:%M:00', created_at)"
@@ -29,7 +29,7 @@ module Faultline
       when :hour
         if adapter.include?("postgresql")
           "date_trunc('hour', created_at)"
-        elsif adapter.include?("mysql")
+        elsif adapter.include?("mysql") || adapter.include?("trilogy")
           "DATE_FORMAT(created_at, '%Y-%m-%d %H:00:00')"
         else # SQLite
           "strftime('%Y-%m-%d %H:00:00', created_at)"
